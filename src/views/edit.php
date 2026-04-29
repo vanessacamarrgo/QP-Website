@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Models\Task;
+use App\Models\BusCompany;
 
-/** @var Task $task */
+/** @var BusCompany $task */
 /** @var list<string> $errors */
 /** @var array{title: string, description: string, is_done: bool} $old */
 

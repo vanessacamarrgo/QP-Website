@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Controllers\Api;
 
-use App\Models\Task;
-use App\Services\TaskService;
+use App\Models\BusCompany;
+use App\Services\BusCompanyService;
 
 /** Controller da API para leitura de tasks em JSON. */
 final class TaskApiController
 {
-    private TaskService $tasks;
+    private BusCompanyService $tasks;
 
-    public function __construct(?TaskService $tasks = null)
+    public function __construct(?BusCompanyService $tasks = null)
     {
-        $this->tasks = $tasks ?? new TaskService();
+        $this->tasks = $tasks ?? new BusCompanyService();
     }
 
     /** Retorna todas as tasks. */
@@ -41,7 +41,7 @@ final class TaskApiController
         if ($task === null) {
             $this->json(404, [
                 'ok' => false,
-                'message' => 'Task not found.',
+                'message' => 'BusCompany not found.',
             ]);
             return;
         }
@@ -53,7 +53,7 @@ final class TaskApiController
     }
 
     /** @return array<string, mixed> */
-    private function toArray(Task $task): array
+    private function toArray(BusCompany $task): array
     {
         return [
             'id' => $task->id,

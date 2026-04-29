@@ -14,15 +14,12 @@ $flash = View::pullFlash();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= htmlspecialchars($title ?? 'Task App', ENT_QUOTES, 'UTF-8') ?></title>
+    <title><?= htmlspecialchars($title ?? 'Cadastro de Viações', ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="stylesheet" href="/app.css">
 </head>
 <body>
+
 <header>
-    <nav>
-        <a href="/tasks">Tasks</a>
-        | <a href="/tasks/create">Nova task</a>
-    </nav>
 </header>
 
 <?php if ($flash !== null): ?>
@@ -37,5 +34,6 @@ $flash = View::pullFlash();
 <main>
     <?= $content ?>
 </main>
+
 </body>
 </html>
