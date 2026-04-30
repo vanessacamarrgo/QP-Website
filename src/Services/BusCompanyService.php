@@ -87,14 +87,6 @@ final class BusCompanyService
         $this->log($id, 'update', json_encode($old), json_encode($new));
     }
 
-    public function delete(int $id): void
-    {
-        $old = $this->find($id);
-        $stmt = $this->pdo->prepare('DELETE FROM tasks.bus_companies WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        $this->log($id, 'delete', json_encode($old), null);
-    }
-
     private function log(int $id, string $action, ?string $old, ?string $new): void
     {
         $stmt = $this->pdo->prepare(
@@ -107,16 +99,20 @@ final class BusCompanyService
     /** Busca apenas os nomes de todas as viações para o autocomplete. */
     public function allNames(): array
     {
-        $query = $this->pdo->query("SELECT name FROM bus_companies ORDER BY name ASC");
+        $query = $this->pdo->query("SELECT name FROM tasks.bus_companies ORDER BY name ASC");
         return $query->fetchAll(\PDO::FETCH_COLUMN);
     }
 
 
     /** Busca o histórico completo de alterações */
+    /** Busca o histórico completo de alterações */
     public function getLogs(): array
     {
         $stmt = $this->pdo->query("
-        SELECT l.*, b.name
+        SELECT 
+            l.*, 
+            b.name, 
+            b.logo  -- Adicionamos a logo aqui
         FROM tasks.bus_company_logs l
         LEFT JOIN tasks.bus_companies b ON b.id = l.bus_company_id
         ORDER BY l.created_at DESC
@@ -124,4 +120,23 @@ final class BusCompanyService
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
-}
+    public function delete(int $id): bool
+    {
+        $company = $this->find($id);
+        $companyName = $company ? $company->name : "ID: $id";
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO tasks.bus_company_logs (bus_company_id, action, old_value, new_value) 
+         VALUES (NULL, :action, :old, :new)'
+        );
+        $stmt->execute([
+            'action' => 'delete',
+            'old' => "Viação removida: $companyName",
+            'new' => null
+        ]);
+
+        $stmt = $this->pdo->prepare("DELETE FROM tasks.bus_companies WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+    }
+

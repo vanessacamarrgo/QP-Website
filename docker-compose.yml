@@ -26,6 +26,7 @@ services:
     image: mysql:8.0
     container_name: task_app_db
     restart: unless-stopped
+    command: --default-time-zone='-03:00'
     environment:
       MYSQL_DATABASE: tasks
       MYSQL_USER: app

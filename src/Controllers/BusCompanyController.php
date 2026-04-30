@@ -26,11 +26,10 @@ final class BusCompanyController
             'companies' => $this->service->all($name, $status),
             'filterName' => $name,
             'filterStatus' => $status,
-            'busCompanyNamesJson' => json_encode($this->service->allNames()) // Adicionado para o seu autocomplete
+            'busCompanyNamesJson' => json_encode($this->service->allNames())
         ]);
     }
 
-    /** Abre o formulário de criação */
     public function create(): void
     {
         View::render('create', [
@@ -57,7 +56,6 @@ final class BusCompanyController
         View::redirect('/bus-companies');
     }
 
-    /** Abre o formulário de edição */
     public function edit(int $id): void
     {
         $company = $this->service->find($id);
@@ -70,12 +68,7 @@ final class BusCompanyController
             'title' => 'Editar Viação',
             'company' => $company,
             'errors' => [],
-            'old' => [
-                'name' => $company->name,
-                'url' => $company->url,
-                'city' => $company->city,
-                'status' => $company->status
-            ]
+            'old' => (array) $company // Simplificado para pegar os dados do objeto
         ]);
     }
 
@@ -95,14 +88,16 @@ final class BusCompanyController
             return;
         }
 
-        $data['logo'] = $this->handleUpload() ?? $company->logo;
+        // Se subir uma nova logo, usa a nova. Se não, mantém a que já estava no banco.
+        $newLogo = $this->handleUpload();
+        $data['logo'] = $newLogo ?? $company->logo;
+
         $this->service->update($id, $data);
 
         View::flash('success', 'Viação atualizada.');
         View::redirect('/bus-companies');
     }
 
-    /** Exclui uma viação */
     public function destroy(int $id): void
     {
         $this->service->delete($id);
@@ -110,16 +105,15 @@ final class BusCompanyController
         View::redirect('/bus-companies');
     }
 
-    /** Abre a página de histórico */
     public function logs(): void
     {
         $logs = $this->service->getLogs();
-
         View::render('logs', [
             'title' => 'Histórico de Alterações',
             'logs' => $logs
         ]);
     }
+
     private function capturePostData(): array
     {
         return [
@@ -140,12 +134,30 @@ final class BusCompanyController
         return $errors;
     }
 
+    /**
+     * Função de Upload Ajustada para Docker Desktop
+     */
     private function handleUpload(): ?string
     {
-        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== 0) return null;
-        $name = uniqid() . '_' . basename($_FILES['logo']['name']);
-        $path = 'uploads/' . $name;
-        move_uploaded_file($_FILES['logo']['tmp_name'], __DIR__ . '/../../public/' . $path);
-        return $path;
+        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        // Caminho absoluto baseado na pasta 'public' configurada no Docker
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
+
+        // Se a pasta não existir dentro da public, ele tenta criar
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $fileName = uniqid() . '_' . basename($_FILES['logo']['name']);
+        $targetFile = $uploadDir . $fileName;
+
+        if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetFile)) {
+            return $fileName; // Retorna apenas o nome do arquivo
+        }
+
+        return null;
     }
-} // <--- ESTA CHAVE ESTAVA FALTANDO!
+}

@@ -184,7 +184,6 @@ body {
 
 .table-card-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -211,7 +210,6 @@ th {
   background: #f8f9ff;
   font-size: 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
   color: #555;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -219,7 +217,6 @@ th {
 
 td {
   padding: 10px 14px;
-  border-bottom: 1px solid #f0f0f0;
   font-size: 13px;
 }
 
@@ -453,12 +450,11 @@ th {
   color: #555;
   padding: 12px;
   text-align: left;
-  border: 1px solid #eee;
 }
 
 td {
   padding: 10px;
-  border: 1px solid #eee;
+  border-bottom: 1px solid #eee;
   font-size: 13px;
 }
 
@@ -471,4 +467,3 @@ img {
   border-radius: 6px;
   object-fit: contain;
 }
-

@@ -1,52 +1,29 @@
 <?php
-
 declare(strict_types=1);
 
-use App\Models\BusCompany;
-
-/** @var BusCompany $task */
+/** @var array $company */ // O Controller deve enviar os dados da viação aqui
 /** @var list<string> $errors */
-/** @var array{title: string, description: string, is_done: bool} $old */
+/** @var array $old */
 
+// Se o controller enviou como objeto, convertemos para facilitar o uso no partial
+$companyData = (array) ($company ?? []);
 ?>
 
-<h1>Editar task #<?= (int) $task->id ?></h1>
+<div class="header">
+    <h1>Editar Viação #<?= htmlspecialchars((string)($companyData['id'] ?? '')) ?></h1>
+    <a href="/bus-companies" class="btn">Voltar</a>
+</div>
 
-<?php if ($errors !== []): ?>
-    <div class="alert alert--danger">
-        <p><strong>Corrija os erros:</strong></p>
-        <ul>
-            <?php foreach ($errors as $error): ?>
-                <li><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-<?php endif; ?>
-
-<form method="post" action="/tasks/<?= (int) $task->id ?>">
-    <div>
-        <label for="title">Título</label><br>
-        <input
-            id="title"
-            type="text"
-            name="title"
-            value="<?= htmlspecialchars($old['title'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-            required
-            maxlength="255"
-        >
-    </div>
-
-    <div>
-        <label for="description">Descrição</label><br>
-        <textarea id="description" name="description" rows="4" cols="60"><?= htmlspecialchars($old['description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
-    </div>
-
-    <div>
-        <label>
-            <input type="checkbox" name="is_done" value="1" <?= !empty($old['is_done']) ? 'checked' : '' ?>>
-            Concluída
-        </label>
-    </div>
-
-    <button type="submit">Salvar alterações</button>
-</form>
+<div class="container">
+    <form method="POST" action="/bus-companies/<?= $company->id ?>/update" enctype="multipart/form-data" class="form-card">
+        <?php
+        // Se houver erro de validação, usa o 'old'. Se não, usa os dados do banco.
+        $busCompany = !empty($old) ? $old : (array) $company;
+        include __DIR__ . '/partials/form.php';
+        ?>
+        <div class="form-actions">
+            <button type="submit" class="btn">Salvar Alterações</button>
+            <a href="/bus-companies" class="btn btn-cancel">Cancelar</a>
+        </div>
+    </form>
+</div>

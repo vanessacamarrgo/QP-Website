@@ -22,3 +22,4 @@ $router->post('/bus-companies', [BusCompanyController::class, 'store']);
 $router->get('/bus-companies/{id}/edit', [BusCompanyController::class, 'edit']);
 $router->post('/bus-companies/{id}', [BusCompanyController::class, 'update']);
 $router->post('/bus-companies/{id}/delete', [BusCompanyController::class, 'destroy']);
+$router->post('/bus-companies/{id}/update', [BusCompanyController::class, 'update']);

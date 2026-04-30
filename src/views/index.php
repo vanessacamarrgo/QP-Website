@@ -86,11 +86,17 @@
                     <tr>
                         <td><?= $company->id ?></td>
                         <td>
-                            <?php if ($company->logo): ?>
-                                <img src="/<?= htmlspecialchars($company->logo) ?>"
+                            <?php if (!empty($company->logo)): ?>
+                                <?php
+
+                                $cleanPath = ltrim($company->logo, '/');
+
+                                $finalSrc = (strpos($cleanPath, 'uploads/') === 0) ? $cleanPath : 'uploads/' . $cleanPath;
+                                ?>
+                                <img src="/<?= htmlspecialchars($finalSrc) ?>"
                                      style="width:50px;height:50px;object-fit:contain;border-radius:6px;border:1px solid #eee;">
                             <?php else: ?>
-                                —
+
                             <?php endif; ?>
                         </td>
                         <td class="company-name"><?= htmlspecialchars($company->name) ?></td>
