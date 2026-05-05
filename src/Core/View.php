@@ -35,6 +35,27 @@ final class View
         require $layoutFile;
     }
 
+    /** * Renderiza a Home sem o layout padrão para evitar conflitos de CSS.
+     * @param array<string, mixed> $data
+     */
+    public static function renderHome(string $view, array $data = []): void
+    {
+        $basePath = dirname(__DIR__);
+        $viewFile = $basePath . '/views/' . $view . '.php';
+
+        if (!is_file($viewFile)) {
+            http_response_code(500);
+            echo 'View da Home não encontrada.';
+            return;
+        }
+
+        // Extrai os dados ($companies, etc) para ficarem disponíveis no HTML
+        extract($data, EXTR_SKIP);
+
+        // Carrega apenas o arquivo da home diretamente
+        require $viewFile;
+    }
+
     /** Redireciona para um path e encerra a requisicao. */
     public static function redirect(string $path): void
     {

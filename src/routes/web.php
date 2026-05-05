@@ -2,19 +2,22 @@
 
 declare(strict_types=1);
 
-/** Arquivo de registro de rotas web adaptado do padrão Raissa Kuzer. */
 use App\Controllers\BusCompanyController;
 
 /** @var App\Core\Router $router */
 
-// Rota inicial e listagem
-$router->get('/', [BusCompanyController::class, 'index']);
-$router->get('/bus-companies', [BusCompanyController::class, 'index']);
+// --- ALTERE ESTA PARTE ---
+// A rota raiz agora vai para a HOME (Quero Passagem)
+$router->get('/', [BusCompanyController::class, 'home']);
 
-// Rota de Histórico (Logs) - Para o botão "Histórico de Alterações"
+// A listagem/cadastro fica apenas nesta URL
+$router->get('/bus-companies', [BusCompanyController::class, 'index']);
+// -------------------------
+
+// Rota de Histórico (Logs)
 $router->get('/bus-companies/logs', [BusCompanyController::class, 'logs']);
 
-// Rotas de Criação - Para o botão "+ Nova Viação"
+// Rotas de Criação
 $router->get('/bus-companies/create', [BusCompanyController::class, 'create']);
 $router->post('/bus-companies', [BusCompanyController::class, 'store']);
 

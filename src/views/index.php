@@ -24,6 +24,7 @@
     <div class="header-actions">
         <a href="/bus-companies/logs" class="btn">Histórico de Alterações</a>
         <a href="/bus-companies/create" class="btn">+ Nova Viação</a>
+        <a href="/#" class="btn">Home Page</a>
     </div>
 </div>
 

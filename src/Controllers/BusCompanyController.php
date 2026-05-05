@@ -18,8 +18,8 @@ final class BusCompanyController
 
     public function index(): void
     {
-        $name = (string) ($_GET['name'] ?? '');
-        $status = (string) ($_GET['status'] ?? '');
+        $name = (string)($_GET['name'] ?? '');
+        $status = (string)($_GET['status'] ?? '');
 
         View::render('index', [
             'title' => 'Viações',
@@ -68,7 +68,7 @@ final class BusCompanyController
             'title' => 'Editar Viação',
             'company' => $company,
             'errors' => [],
-            'old' => (array) $company // Simplificado para pegar os dados do objeto
+            'old' => (array)$company // Simplificado para pegar os dados do objeto
         ]);
     }
 
@@ -117,10 +117,10 @@ final class BusCompanyController
     private function capturePostData(): array
     {
         return [
-            'name'   => trim((string) ($_POST['name'] ?? '')),
-            'url'    => trim((string) ($_POST['url'] ?? '')),
-            'city'   => trim((string) ($_POST['city'] ?? '')),
-            'status' => (string) ($_POST['status'] ?? 'active'),
+            'name' => trim((string)($_POST['name'] ?? '')),
+            'url' => trim((string)($_POST['url'] ?? '')),
+            'city' => trim((string)($_POST['city'] ?? '')),
+            'status' => (string)($_POST['status'] ?? 'active'),
         ];
     }
 
@@ -159,5 +159,13 @@ final class BusCompanyController
         }
 
         return null;
+    }
+    public function home(): void
+    {
+        $companies = $this->service->all('', '');
+
+        View::renderHome('home', [
+            'companies' => $companies
+        ]);
     }
 }
