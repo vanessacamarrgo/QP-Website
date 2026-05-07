@@ -22,7 +22,6 @@ btnShowMore.addEventListener('click', function() {
     var extras = document.querySelectorAll('.faq-extra');
 
     isExpanded = !isExpanded;
-
     extras.forEach(function(item) {
         item.classList.toggle('hidden');
     });

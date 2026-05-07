@@ -1057,6 +1057,145 @@ footer {
     margin-bottom: 4px;
 }
 
+/* Reset básico para ocupar a tela toda */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.login-page {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+/* Coluna Azul */
+.login-sidebar {
+    width: 25%;
+    background-color: #0D2240; /* Azul escuro da Quero Passagem */
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+}
+
+.logo-img {
+    width: 180px;
+}
+
+/* Coluna Branca */
+.login-content {
+    flex: 1;
+    background-color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 420px;
+}
+
+.login-box h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.login-box .subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+/* Input */
+.form-group input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+/* Alerta Azul */
+.info-alert {
+    background-color: #E8F0FE;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: #1A73E8;
+    line-height: 1.4;
+}
+
+/* Botão Continuar */
+.btn-continue {
+    width: 100%;
+    padding: 15px;
+    background-color: #BDBDBD; /* Cor desativada igual ao print */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-continue:hover {
+    background-color: #0D2240;
+}
+
+/* Divisor 'ou' */
+.divider {
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    line-height: 0.1em;
+    margin: 30px 0;
+}
+
+.divider span {
+    background: #fff;
+    padding: 0 10px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* Botões Sociais */
+.btn-social {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #0D2240;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+/* Central de ajuda no topo direito */
+.help-center {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+}
+
+.help-center a {
+    text-decoration: none;
+    color: #0D2240;
+    font-size: 14px;
+    font-weight: bold;
+}
 
 
 @media (max-width: 1024px) {

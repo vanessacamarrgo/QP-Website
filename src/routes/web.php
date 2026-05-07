@@ -6,13 +6,9 @@ use App\Controllers\BusCompanyController;
 
 /** @var App\Core\Router $router */
 
-// --- ALTERE ESTA PARTE ---
-// A rota raiz agora vai para a HOME (Quero Passagem)
 $router->get('/', [BusCompanyController::class, 'home']);
 
-// A listagem/cadastro fica apenas nesta URL
 $router->get('/bus-companies', [BusCompanyController::class, 'index']);
-// -------------------------
 
 // Rota de Histórico (Logs)
 $router->get('/bus-companies/logs', [BusCompanyController::class, 'logs']);
@@ -26,3 +22,14 @@ $router->get('/bus-companies/{id}/edit', [BusCompanyController::class, 'edit']);
 $router->post('/bus-companies/{id}', [BusCompanyController::class, 'update']);
 $router->post('/bus-companies/{id}/delete', [BusCompanyController::class, 'destroy']);
 $router->post('/bus-companies/{id}/update', [BusCompanyController::class, 'update']);
+
+
+// MANTENHA ESTAS:
+$router->get('/login', [\App\Controllers\AuthController::class, 'loginForm']);
+$router->post('/login', [\App\Controllers\AuthController::class, 'authenticate']);
+$router->get('/logout', [\App\Controllers\AuthController::class, 'logout']);
+
+$router->get('/register', [\App\Controllers\AuthController::class, 'registerForm']);
+$router->post('/register', [\App\Controllers\AuthController::class, 'register']);
+
+$router->get('/', [\App\Controllers\HomeController::class, 'home']);

@@ -11,13 +11,60 @@ final class BusCompanyController
 {
     private BusCompanyService $service;
 
+    /**
+     * O Construtor agora é público. Ele não barra ninguém aqui
+     * para permitir que a Home Page funcione para todos.
+     */
     public function __construct(?BusCompanyService $service = null)
     {
         $this->service = $service ?? new BusCompanyService();
     }
 
+    /**
+     * MÉTODO PORTEIRO: Verifica se é Admin.
+     * Chamamos isso dentro das funções que queremos proteger.
+     */
+    private function checkAdmin(): void
+    {
+        // Garante que a sessão está aberta
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // DEBUG TEMPORÁRIO: Se o botão não funcionar, descomente a linha abaixo para ver o erro
+        // var_dump($_SESSION); die();
+
+        // Verifica se o e-mail existe na sessão.
+        // DICA: mude 'adm@email.com' para o e-mail que você REALMENTE usa no banco
+        $emailLogado = $_SESSION['user_email'] ?? '';
+
+        if (strtolower($emailLogado) !== 'adm@gmail.com') {
+            View::flash('error', 'Acesso negado. Você não é o administrador.');
+            header('Location: /');
+            exit;
+        }
+    }
+
+    /**
+     * HOME PAGE: Aberta para o público e filtra apenas Ativas.
+     */
+    public function home(): void
+    {
+        // Filtramos por 'active' para não mostrar viações inativas na vitrine
+        $companies = $this->service->all('', 'active');
+
+        View::renderHome('home', [
+            'companies' => $companies
+        ]);
+    }
+
+    /**
+     * LISTA DO PAINEL ADM
+     */
     public function index(): void
     {
+        $this->checkAdmin(); // Protegido
+
         $name = (string)($_GET['name'] ?? '');
         $status = (string)($_GET['status'] ?? '');
 
@@ -32,6 +79,8 @@ final class BusCompanyController
 
     public function create(): void
     {
+        $this->checkAdmin(); // Protegido
+
         View::render('create', [
             'title' => 'Nova Viação',
             'errors' => [],
@@ -41,6 +90,8 @@ final class BusCompanyController
 
     public function store(): void
     {
+        $this->checkAdmin(); // Protegido
+
         $data = $this->capturePostData();
         $errors = $this->validate($data);
 
@@ -58,6 +109,8 @@ final class BusCompanyController
 
     public function edit(int $id): void
     {
+        $this->checkAdmin(); // Protegido
+
         $company = $this->service->find($id);
         if (!$company) {
             View::redirect('/bus-companies');
@@ -68,12 +121,14 @@ final class BusCompanyController
             'title' => 'Editar Viação',
             'company' => $company,
             'errors' => [],
-            'old' => (array)$company // Simplificado para pegar os dados do objeto
+            'old' => (array)$company
         ]);
     }
 
     public function update(int $id): void
     {
+        $this->checkAdmin(); // Protegido
+
         $company = $this->service->find($id);
         if (!$company) {
             View::redirect('/bus-companies');
@@ -88,7 +143,6 @@ final class BusCompanyController
             return;
         }
 
-        // Se subir uma nova logo, usa a nova. Se não, mantém a que já estava no banco.
         $newLogo = $this->handleUpload();
         $data['logo'] = $newLogo ?? $company->logo;
 
@@ -100,6 +154,8 @@ final class BusCompanyController
 
     public function destroy(int $id): void
     {
+        $this->checkAdmin(); // Protegido
+
         $this->service->delete($id);
         View::flash('success', 'Viação removida.');
         View::redirect('/bus-companies');
@@ -107,6 +163,8 @@ final class BusCompanyController
 
     public function logs(): void
     {
+        $this->checkAdmin(); // Protegido
+
         $logs = $this->service->getLogs();
         View::render('logs', [
             'title' => 'Histórico de Alterações',
@@ -143,10 +201,8 @@ final class BusCompanyController
             return null;
         }
 
-        // Caminho absoluto baseado na pasta 'public' configurada no Docker
         $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
 
-        // Se a pasta não existir dentro da public, ele tenta criar
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0775, true);
         }
@@ -155,17 +211,9 @@ final class BusCompanyController
         $targetFile = $uploadDir . $fileName;
 
         if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetFile)) {
-            return $fileName; // Retorna apenas o nome do arquivo
+            return $fileName;
         }
 
         return null;
-    }
-    public function home(): void
-    {
-        $companies = $this->service->all('', '');
-
-        View::renderHome('home', [
-            'companies' => $companies
-        ]);
     }
 }

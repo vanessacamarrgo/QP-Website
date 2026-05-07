@@ -48,7 +48,7 @@ final class BusCompanyService
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO tasks.bus_companies (name, url, city, status, logo) 
-             VALUES (:name, :url, :city, :status, :logo)'
+         VALUES (:name, :url, :city, :status, :logo)'
         );
 
         $stmt->execute([
@@ -60,10 +60,12 @@ final class BusCompanyService
         ]);
 
         $id = (int)$this->pdo->lastInsertId();
+
+        $data['id'] = $id;
+
         $this->log($id, 'create', null, json_encode($data));
         return $id;
     }
-
     public function update(int $id, array $data): void
     {
         $old = $this->find($id);
@@ -105,14 +107,14 @@ final class BusCompanyService
 
 
     /** Busca o histórico completo de alterações */
-    /** Busca o histórico completo de alterações */
     public function getLogs(): array
     {
         $stmt = $this->pdo->query("
         SELECT 
             l.*, 
-            b.name, 
-            b.logo  -- Adicionamos a logo aqui
+            l.bus_company_id AS viação_id, 
+            b.name AS viação_nome, 
+            b.logo AS viação_logo
         FROM tasks.bus_company_logs l
         LEFT JOIN tasks.bus_companies b ON b.id = l.bus_company_id
         ORDER BY l.created_at DESC
@@ -122,21 +124,39 @@ final class BusCompanyService
     }
     public function delete(int $id): bool
     {
+        //Busca os dados da viação enquanto ela ainda existe
         $company = $this->find($id);
-        $companyName = $company ? $company->name : "ID: $id";
 
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO tasks.bus_company_logs (bus_company_id, action, old_value, new_value) 
-         VALUES (NULL, :action, :old, :new)'
-        );
-        $stmt->execute([
-            'action' => 'delete',
-            'old' => "Viação removida: $companyName",
-            'new' => null
-        ]);
+        if ($company) {
+            try {
+                //Cria o log de 'delete' salvando ID, Nome e Logo no JSON
+                $sqlLog = "INSERT INTO tasks.bus_company_logs (bus_company_id, action, old_value, new_value, created_at) 
+                       VALUES (:id, 'delete', :old, NULL, NOW())";
 
-        $stmt = $this->pdo->prepare("DELETE FROM tasks.bus_companies WHERE id = ?");
-        return $stmt->execute([$id]);
+                $stmtLog = $this->pdo->prepare($sqlLog);
+                $stmtLog->execute([
+                    'id'  => $id,
+                    'old' => json_encode([
+                        'id'   => $company->id,
+                        'name' => $company->name,
+                        'logo' => $company->logo
+                    ])
+                ]);
+
+                // Desvincula o ID do log para permitir o DELETE
+                $this->pdo->prepare("UPDATE tasks.bus_company_logs SET bus_company_id = NULL WHERE bus_company_id = :id")
+                    ->execute(['id' => $id]);
+
+            } catch (\Exception $e) {
+                // Ignora erro no log e segue para a exclusão
+            }
+
+            //Deleta a viação da tabela principal
+            $sql = "DELETE FROM tasks.bus_companies WHERE id = :id";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute(['id' => $id]);
+        }
+
+        return false;
     }
-    }
-
+}

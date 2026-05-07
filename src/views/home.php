@@ -36,8 +36,28 @@ declare(strict_types=1);
                 <img src="https://queropassagem.com.br/images/icon_atendimento-online_ajuda.svg" alt="Ícone Ajuda" width="22">
                 <span>Central de Ajuda</span>
             </button>
-            <button class="btn-enter">ENTRAR</button>
-            <a href="/bus-companies" class="btn-adm-panel">Painel ADM</a>
+
+            <?php
+            // Garante que a sessão existe para podermos checar o usuário
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            // 1. Se NÃO estiver logado, mostra o botão ENTRAR
+            if (!isset($_SESSION['user_id'])):
+                ?>
+                <a href="/login" class="btn-enter" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">ENTRAR</a>
+
+            <?php else: ?>
+                <a href="/logout" class="btn-enter" ">SAIR</a>
+
+                <?php
+                // 2. REGRA DO ADMIN: Só aparece se o e-mail for o do administrador
+                // Você precisa ter cadastrado esse e-mail na sua tabela de usuários
+                if (isset($_SESSION['user_email']) && $_SESSION['user_email'] === 'adm@gmail.com'):
+                    ?>
+                    <a href="/bus-companies" class="btn-adm-panel">Painel ADM</a>
+                <?php endif; ?>
+
+            <?php endif; ?>
         </aside>
     </div>
 </header>
@@ -123,9 +143,17 @@ declare(strict_types=1);
         <?php if (!empty($companies)): ?>
             <?php foreach ($companies as $company): ?>
                 <?php
+                // Extração dos dados (Garante que não dê erro se for objeto ou array)
                 $cName = is_object($company) ? $company->name : ($company['name'] ?? 'Viação');
                 $cLogo = is_object($company) ? $company->logo : ($company['logo'] ?? '');
-                $logoUrl = "/uploads/" . ltrim($cLogo, '/');
+
+                // Se a logo estiver vazia, usamos uma imagem transparente ou um placeholder
+                // Se não estiver vazia, montamos o caminho. O (string) resolve o erro do ltrim.
+                if (empty($cLogo)) {
+                    $logoUrl = "https://via.placeholder.com/100x40?text=Sem+Logo";
+                } else {
+                    $logoUrl = "/uploads/" . ltrim((string)$cLogo, '/');
+                }
                 ?>
                 <li>
                     <div class="card-logo">

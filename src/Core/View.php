@@ -91,4 +91,16 @@ final class View
             'message' => (string) $flash['message'],
         ];
     }
+
+    public function create() {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+
+        // Se chegou aqui, está logado. Segue o baile...
+        return View::renderHome('create', []);
+    }
 }
