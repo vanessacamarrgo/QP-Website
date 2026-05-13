@@ -23,7 +23,6 @@ class AuthController {
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
 
-        // Presumindo que getPdo() está disponível globalmente
         $pdo = getPdo();
         $stmt = $pdo->prepare("SELECT * FROM tasks.users WHERE email = ?");
         $stmt->execute([$email]);
@@ -38,7 +37,14 @@ class AuthController {
             exit;
         }
 
-        header('Location: /login?error=1');
+        // Gravamos das duas formas para garantir que a View ache
+        $_SESSION['erro_login_direto'] = 'E-mail ou senha inválidos.';
+        \App\Core\View::flash('error', 'E-mail ou senha inválidos.');
+
+        // Força a gravação da sessão antes de redirecionar
+        session_write_close();
+
+        header('Location: /login');
         exit;
     }
 

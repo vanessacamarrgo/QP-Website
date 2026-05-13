@@ -50,11 +50,12 @@ declare(strict_types=1);
                 <a href="/logout" class="btn-enter" ">SAIR</a>
 
                 <?php
-                // 2. REGRA DO ADMIN: Só aparece se o e-mail for o do administrador
-                // Você precisa ter cadastrado esse e-mail na sua tabela de usuários
-                if (isset($_SESSION['user_email']) && $_SESSION['user_email'] === 'adm@gmail.com'):
+                $admins = ['adm@gmail.com', 'adm2@gmail.com', 'adm3@gmail.com'];
+
+                if (isset($_SESSION['user_email']) && in_array(strtolower($_SESSION['user_email']), $admins)):
                     ?>
                     <a href="/bus-companies" class="btn-adm-panel">Painel ADM</a>
+
                 <?php endif; ?>
 
             <?php endif; ?>
@@ -143,16 +144,17 @@ declare(strict_types=1);
         <?php if (!empty($companies)): ?>
             <?php foreach ($companies as $company): ?>
                 <?php
-                // Extração dos dados (Garante que não dê erro se for objeto ou array)
+                // Extração segura
                 $cName = is_object($company) ? $company->name : ($company['name'] ?? 'Viação');
                 $cLogo = is_object($company) ? $company->logo : ($company['logo'] ?? '');
 
-                // Se a logo estiver vazia, usamos uma imagem transparente ou um placeholder
-                // Se não estiver vazia, montamos o caminho. O (string) resolve o erro do ltrim.
+                // LÓGICA CORRIGIDA:
+                // O banco já guarda "uploads/nome.png". Só precisamos colocar a / na frente.
                 if (empty($cLogo)) {
                     $logoUrl = "https://via.placeholder.com/100x40?text=Sem+Logo";
                 } else {
-                    $logoUrl = "/uploads/" . ltrim((string)$cLogo, '/');
+                    // Garante que o caminho comece com / e não duplique o nome da pasta
+                    $logoUrl = "/" . ltrim((string)$cLogo, '/');
                 }
                 ?>
                 <li>

@@ -91,14 +91,25 @@ final class BusCompanyService
 
     private function log(int $id, string $action, ?string $old, ?string $new): void
     {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        // Captura o ID da sessão como inteiro
+        $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+
         $stmt = $this->pdo->prepare(
-            'INSERT INTO tasks.bus_company_logs (bus_company_id, action, old_value, new_value) 
-             VALUES (:id, :action, :old, :new)'
+            'INSERT INTO tasks.bus_company_logs (bus_company_id, action, user_id, old_value, new_value) 
+         VALUES (:id, :action, :user_id, :old, :new)'
         );
-        $stmt->execute(['id' => $id, 'action' => $action, 'old' => $old, 'new' => $new]);
+
+        $stmt->execute([
+            'id'      => $id,
+            'action'  => $action,
+            'user_id' => $userId,
+            'old'     => $old,
+            'new'     => $new
+        ]);
     }
 
-    /** Busca apenas os nomes de todas as viações para o autocomplete. */
     public function allNames(): array
     {
         $query = $this->pdo->query("SELECT name FROM tasks.bus_companies ORDER BY name ASC");
@@ -106,52 +117,88 @@ final class BusCompanyService
     }
 
 
-    /** Busca o histórico completo de alterações */
-    public function getLogs(): array
+    public function getLogs(array $filters = []): array
     {
-        $stmt = $this->pdo->query("
-        SELECT 
-            l.*, 
-            l.bus_company_id AS viação_id, 
-            b.name AS viação_nome, 
-            b.logo AS viação_logo
-        FROM tasks.bus_company_logs l
-        LEFT JOIN tasks.bus_companies b ON b.id = l.bus_company_id
-        ORDER BY l.created_at DESC
-    ");
+        $sql = "SELECT l.*, b.name as bus_name 
+            FROM tasks.bus_company_logs l
+            LEFT JOIN tasks.bus_companies b ON l.bus_company_id = b.id
+            WHERE 1=1"; // O 1=1 facilita adicionar ANDs dinamicamente
+
+        $params = [];
+
+        // Filtro por ID do Log
+        if (!empty($filters['id'])) {
+            $sql .= " AND l.id = :id";
+            $params['id'] = $filters['id'];
+        }
+
+        // Filtro por ID do Usuário
+        if (!empty($filters['user_id'])) {
+            $sql .= " AND l.user_id = :user_id";
+            $params['user_id'] = $filters['user_id'];
+        }
+
+        // Filtro por ID da Viação (olha no log ou no JSON se necessário)
+        if (!empty($filters['bus_id'])) {
+            $sql .= " AND l.bus_company_id = :bus_id";
+            $params['bus_id'] = $filters['bus_id'];
+        }
+
+        // Filtro por Nome da Viação (Busca no nome atual ou dentro do JSON old_value)
+        if (!empty($filters['bus_name'])) {
+            $sql .= " AND (b.name LIKE :bus_name OR l.old_value LIKE :bus_name_json)";
+            $params['bus_name'] = "%" . $filters['bus_name'] . "%";
+            $params['bus_name_json'] = "%" . $filters['bus_name'] . "%";
+        }
+
+        // Filtro por Ação (CREATE, UPDATE, DELETE)
+        if (!empty($filters['action'])) {
+            $sql .= " AND l.action = :action";
+            $params['action'] = $filters['action'];
+        }
+
+        // Filtro por Data (converte para o formato do banco)
+        if (!empty($filters['date'])) {
+            $sql .= " AND DATE(l.created_at) = :date";
+            $params['date'] = $filters['date'];
+        }
+
+        $sql .= " ORDER BY l.created_at DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
     public function delete(int $id): bool
     {
-        //Busca os dados da viação enquanto ela ainda existe
         $company = $this->find($id);
 
         if ($company) {
             try {
-                //Cria o log de 'delete' salvando ID, Nome e Logo no JSON
-                $sqlLog = "INSERT INTO tasks.bus_company_logs (bus_company_id, action, old_value, new_value, created_at) 
-                       VALUES (:id, 'delete', :old, NULL, NOW())";
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                $userId = $_SESSION['user_id'] ?? null;
+
+                $sqlLog = "INSERT INTO tasks.bus_company_logs (bus_company_id, action, user_id, old_value, new_value, created_at) 
+                       VALUES (:id, 'delete', :user_id, :old, NULL, NOW())";
 
                 $stmtLog = $this->pdo->prepare($sqlLog);
                 $stmtLog->execute([
-                    'id'  => $id,
-                    'old' => json_encode([
+                    'id'      => $id,
+                    'user_id' => $userId,
+                    'old'     => json_encode([
                         'id'   => $company->id,
                         'name' => $company->name,
                         'logo' => $company->logo
                     ])
                 ]);
 
-                // Desvincula o ID do log para permitir o DELETE
                 $this->pdo->prepare("UPDATE tasks.bus_company_logs SET bus_company_id = NULL WHERE bus_company_id = :id")
                     ->execute(['id' => $id]);
 
             } catch (\Exception $e) {
-                // Ignora erro no log e segue para a exclusão
             }
 
-            //Deleta a viação da tabela principal
             $sql = "DELETE FROM tasks.bus_companies WHERE id = :id";
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute(['id' => $id]);

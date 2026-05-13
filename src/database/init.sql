@@ -16,6 +16,9 @@ CREATE TABLE users (
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+INSERT INTO users (name, email, password) VALUES
+    ('Administrador', 'admin@gmail.com', '$2y$12$w/Aypc3W.YNLh1Mj4qyLpuBBFdmeErmLjwJDJ6pl9f4jtkYp9tere');
+
 -- 2. Viações
 CREATE TABLE bus_companies (
                                id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -27,17 +30,18 @@ CREATE TABLE bus_companies (
                                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. Logs
+-- 3. Logs (Atualizado com user_id para registrar quem fez a ação)
 CREATE TABLE bus_company_logs (
                                   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                                   bus_company_id INT UNSIGNED NOT NULL,
+                                  user_id INT UNSIGNED NULL, -- Coluna para o ID do usuário
                                   action VARCHAR(20) NOT NULL,
                                   old_value TEXT NULL,
                                   new_value TEXT NULL,
                                   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Tasks (Sua tabela original)
+-- 4. Tasks
 CREATE TABLE tasks (
                        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                        title VARCHAR(255) NOT NULL,

@@ -20,37 +20,30 @@ final class BusCompanyController
         $this->service = $service ?? new BusCompanyService();
     }
 
-    /**
-     * MÉTODO PORTEIRO: Verifica se é Admin.
-     * Chamamos isso dentro das funções que queremos proteger.
-     */
+
     private function checkAdmin(): void
     {
-        // Garante que a sessão está aberta
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        // DEBUG TEMPORÁRIO: Se o botão não funcionar, descomente a linha abaixo para ver o erro
-        // var_dump($_SESSION); die();
+        $emailLogado = strtolower($_SESSION['user_email'] ?? '');
 
-        // Verifica se o e-mail existe na sessão.
-        // DICA: mude 'adm@email.com' para o e-mail que você REALMENTE usa no banco
-        $emailLogado = $_SESSION['user_email'] ?? '';
-
-        if (strtolower($emailLogado) !== 'adm@gmail.com') {
+        // Adicionando o terceiro e-mail
+        if (
+            $emailLogado !== 'adm@gmail.com' &&
+            $emailLogado !== 'adm2@gmail.com' &&
+            $emailLogado !== 'adm3@gmail.com'
+        ) {
             View::flash('error', 'Acesso negado. Você não é o administrador.');
             header('Location: /');
             exit;
         }
     }
 
-    /**
-     * HOME PAGE: Aberta para o público e filtra apenas Ativas.
-     */
+
     public function home(): void
     {
-        // Filtramos por 'active' para não mostrar viações inativas na vitrine
         $companies = $this->service->all('', 'active');
 
         View::renderHome('home', [
@@ -58,9 +51,7 @@ final class BusCompanyController
         ]);
     }
 
-    /**
-     * LISTA DO PAINEL ADM
-     */
+
     public function index(): void
     {
         $this->checkAdmin(); // Protegido
@@ -88,25 +79,6 @@ final class BusCompanyController
         ]);
     }
 
-    public function store(): void
-    {
-        $this->checkAdmin(); // Protegido
-
-        $data = $this->capturePostData();
-        $errors = $this->validate($data);
-
-        if ($errors !== []) {
-            View::render('create', ['title' => 'Nova Viação', 'errors' => $errors, 'old' => $data]);
-            return;
-        }
-
-        $data['logo'] = $this->handleUpload();
-        $this->service->create($data);
-
-        View::flash('success', 'Viação criada com sucesso.');
-        View::redirect('/bus-companies');
-    }
-
     public function edit(int $id): void
     {
         $this->checkAdmin(); // Protegido
@@ -125,33 +97,6 @@ final class BusCompanyController
         ]);
     }
 
-    public function update(int $id): void
-    {
-        $this->checkAdmin(); // Protegido
-
-        $company = $this->service->find($id);
-        if (!$company) {
-            View::redirect('/bus-companies');
-            return;
-        }
-
-        $data = $this->capturePostData();
-        $errors = $this->validate($data);
-
-        if ($errors !== []) {
-            View::render('edit', ['title' => 'Editar', 'errors' => $errors, 'company' => $company, 'old' => $data]);
-            return;
-        }
-
-        $newLogo = $this->handleUpload();
-        $data['logo'] = $newLogo ?? $company->logo;
-
-        $this->service->update($id, $data);
-
-        View::flash('success', 'Viação atualizada.');
-        View::redirect('/bus-companies');
-    }
-
     public function destroy(int $id): void
     {
         $this->checkAdmin(); // Protegido
@@ -161,15 +106,23 @@ final class BusCompanyController
         View::redirect('/bus-companies');
     }
 
-    public function logs(): void
+    public function logs()
     {
-        $this->checkAdmin(); // Protegido
+        $this->checkAdmin();
 
-        $logs = $this->service->getLogs();
-        View::render('logs', [
-            'title' => 'Histórico de Alterações',
-            'logs' => $logs
-        ]);
+        // Captura todos os filtros da URL
+        $filters = [
+            'id'        => $_GET['id'] ?? null,
+            'user_id'   => $_GET['user_id'] ?? null,
+            'bus_id'    => $_GET['bus_id'] ?? null,
+            'bus_name'  => $_GET['bus_name'] ?? null,
+            'action'    => $_GET['action'] ?? null,
+            'date'      => $_GET['date'] ?? null,
+        ];
+
+        $logs = $this->service->getLogs($filters);
+
+        View::render('logs', ['logs' => $logs, 'filters' => $filters]);
     }
 
     private function capturePostData(): array
@@ -192,28 +145,102 @@ final class BusCompanyController
         return $errors;
     }
 
+    public function store(): void
+    {
+        $this->checkAdmin();
+
+        $data = $this->capturePostData();
+        $errors = $this->validate($data);
+
+        if ($errors !== []) {
+            View::render('create', ['title' => 'Nova Viação', 'errors' => $errors, 'old' => $data]);
+            return;
+        }
+
+        try {
+            $data['logo'] = $this->handleUpload(); // Faz o upload e valida MIME
+            $this->service->create($data);
+
+            View::flash('success', 'Viação criada com sucesso.');
+            View::redirect('/bus-companies');
+        } catch (\Exception $e) {
+            View::render('create', ['title' => 'Nova Viação', 'errors' => [$e->getMessage()], 'old' => $data]);
+        }
+    }
+
+    public function update(int $id): void
+    {
+        $this->checkAdmin();
+
+        $company = $this->service->find($id);
+        if (!$company) {
+            View::redirect('/bus-companies');
+            return;
+        }
+
+        $data = $this->capturePostData();
+        $errors = $this->validate($data);
+
+        if ($errors !== []) {
+            View::render('edit', ['title' => 'Editar', 'errors' => $errors, 'company' => $company, 'old' => $data]);
+            return;
+        }
+
+        try {
+            $newLogo = $this->handleUpload();
+            // Se $newLogo for null, significa que o usuário não subiu nada novo.
+            // Então usamos a logo que já estava no banco ($company->logo).
+            $data['logo'] = $newLogo ?? $company->logo;
+
+            $this->service->update($id, $data);
+
+            View::flash('success', 'Viação atualizada.');
+            View::redirect('/bus-companies');
+        } catch (\Exception $e) {
+            View::render('edit', ['title' => 'Editar', 'errors' => [$e->getMessage()], 'company' => $company, 'old' => $data]);
+        }
+    }
+
     /**
-     * Função de Upload Ajustada para Docker Desktop
+     * Lógica de Upload Segura com validação de MIME Type real
      */
     private function handleUpload(): ?string
     {
+        // 1. Se não houver arquivo novo, mantém o antigo
         if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
-            return null;
+            return $_POST['old_logo'] ?? null;
         }
 
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/';
+        $file = $_FILES['logo'];
+
+        // 2. Validação de segurança (MIME TYPE)
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+        $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+
+        if (!array_key_exists($mimeType, $allowedMimes)) {
+            throw new \Exception("Apenas imagens JPG ou PNG são permitidas.");
+        }
+
+        // 3. CAMINHO FÍSICO (Para o PHP salvar o arquivo)
+        // DOCUMENT_ROOT aponta para a sua pasta 'public' que o servidor web usa
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
 
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0775, true);
         }
 
-        $fileName = uniqid() . '_' . basename($_FILES['logo']['name']);
+        // 4. Nome aleatório para evitar conflitos
+        $extension = $allowedMimes[$mimeType];
+        $fileName = bin2hex(random_bytes(10)) . '.' . $extension;
         $targetFile = $uploadDir . $fileName;
 
-        if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetFile)) {
-            return $fileName;
+        // 5. Move o arquivo
+        if (move_uploaded_file($file['tmp_name'], $targetFile)) {
+            return 'uploads/' . $fileName;
         }
 
-        return null;
+        return $_POST['old_logo'] ?? null;
     }
+
 }

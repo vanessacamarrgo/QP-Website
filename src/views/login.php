@@ -1,10 +1,32 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+// Lógica de captura do erro (o seu "caçador" de mensagens)
+$erro = null;
+if (isset($_SESSION['flash'])) {
+    if (is_array($_SESSION['flash'])) {
+        // Pega a mensagem dentro daquela estrutura [0]['message'] que vimos no seu print_r
+        $erro = $_SESSION['flash'][0]['message'] ?? ($_SESSION['flash']['error'] ?? null);
+    } else {
+        $erro = $_SESSION['flash'];
+    }
+    unset($_SESSION['flash']); // Limpa para não repetir ao dar F5
+}
+
+// Caso você tenha usado a variável direta no teste anterior
+if (!$erro && isset($_SESSION['erro_login_direto'])) {
+    $erro = $_SESSION['erro_login_direto'];
+    unset($_SESSION['erro_login_direto']);
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Quero Passagem</title>
-    <link rel="icon" type="image/png" href="/images/favicon.ico"></head>
+    <link rel="icon" type="image/png" href="/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -14,12 +36,11 @@
             padding: 0;
             height: 100%;
             font-family: 'Sora', sans-serif;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        .wrapper { display: flex; height: 100vh; width: 100vw; }
+        .wrapper { display: flex; min-height: 100vh; width: 100vw; }
 
-        /* Lado Esquerdo - Barra Azul (470px conforme solicitado) */
         .sidebar {
             width: 470px;
             background-color: #0D2240;
@@ -30,12 +51,8 @@
             flex-shrink: 0;
         }
 
-        .sidebar img {
-            max-width: 140px;
-            height: auto;
-        }
+        .sidebar img { max-width: 140px; height: auto; }
 
-        /* Lado Direito */
         .main-content {
             flex: 1;
             background-color: #fff;
@@ -44,6 +61,7 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            padding: 40px 0;
         }
 
         .help-link {
@@ -78,6 +96,27 @@
             margin-bottom: 25px;
         }
 
+        /* ESTILO DO AVISO DE ERRO */
+        .error-alert {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 600;
+            border-left: 5px solid #dc3545;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
         .input-group input {
             width: 100%;
             padding: 16px;
@@ -102,11 +141,11 @@
             align-items: center;
             gap: 10px;
         }
-        /* Botão Continuar */
+
         .btn-continue {
             width: 100%;
             padding: 16px;
-            background: #bfc4cd; /* Cor cinza padrão (inativo) */
+            background: #0D2240;
             color: white;
             border: none;
             border-radius: 4px;
@@ -116,20 +155,11 @@
             letter-spacing: 0.5px;
             font-family: 'Sora', sans-serif;
             text-transform: uppercase;
-            transition: background 0.3s ease, transform 0.1s ease; /* Transição suave */
+            transition: background 0.3s;
         }
 
-        /* Hover no Botão Continuar */
-        .btn-continue:hover {
-            background-color: #0D2240; /* Azul vibrante estilo Google/Quero Passagem */
-            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2); /* Sombra leve para profundidade */
-        }
+        .btn-continue:hover { background-color: #16325c; }
 
-        /* Feedback de clique (opcional, mas recomendado) */
-        .btn-continue:active {
-            transform: scale(0.98); /* Botão "afunda" levemente ao clicar */
-        }
-        /* Divisor 'ou' */
         .divider {
             display: flex;
             align-items: center;
@@ -144,12 +174,7 @@
         }
         .divider span { padding: 0 15px; font-size: 12px; font-weight: 600; }
 
-        /* BOTÕES SOCIAIS - CORREÇÃO DE ALINHAMENTO */
-        .social-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        .social-buttons { display: flex; flex-direction: column; gap: 12px; }
 
         .btn-social {
             width: 100%;
@@ -160,7 +185,6 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            /* Padding lateral fixo para alinhar as logos em coluna */
             padding: 0 40px;
             font-family: 'Sora', sans-serif;
             font-weight: 600;
@@ -171,27 +195,8 @@
 
         .btn-social:hover { background: #f8f9fa; }
 
-        /* Container da Logo com largura fixa */
-        .icon-box {
-            width: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 10px;
-        }
-
-        .btn-social img {
-            max-height: 22px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        /* Ajuste fino para a Apple que tem SVG desproporcional */
-        .img-apple {
-            height: 26px !important;
-            margin-bottom: 4px;
-        }
-
+        .icon-box { width: 30px; display: flex; justify-content: center; margin-right: 10px; }
+        .btn-social img { max-height: 22px; width: auto; }
     </style>
 </head>
 <body>
@@ -211,6 +216,12 @@
             <h2>Acesse suas viagens</h2>
             <p>Digite seu e-mail ou número de celular para continuar</p>
 
+            <?php if ($erro): ?>
+                <div class="error-alert">
+                    <?= htmlspecialchars((string)$erro) ?>
+                </div>
+            <?php endif; ?>
+
             <form action="/login" method="POST">
                 <div class="input-group">
                     <input type="text" name="email" placeholder="E-mail ou número de celular" required>
@@ -228,38 +239,26 @@
                 <button type="submit" class="btn-continue">CONTINUAR</button>
 
                 <div class="register-footer" style="margin-top: 25px; text-align: center;">
-        <span style="color: #666; font-size: 14px; font-family: 'Sora', sans-serif;">
-            Não tem uma conta?
-        </span>
-                    <a href="/register" style="color: #0D2240; font-weight: 700; text-decoration: none; font-size: 14px; font-family: 'Sora', sans-serif; margin-left: 5px;">
+                    <span style="color: #666; font-size: 14px;">Não tem uma conta?</span>
+                    <a href="/register" style="color: #0D2240; font-weight: 700; text-decoration: none; font-size: 14px; margin-left: 5px;">
                         Faça seu cadastro
                     </a>
                 </div>
             </form>
 
-            <div class="divider">
-                <span>ou</span>
-            </div>
+            <div class="divider"><span>ou</span></div>
 
             <div class="social-buttons">
                 <button class="btn-social" type="button">
-                    <div class="icon-box">
-                        <img src="https://assets.queropassagem.com.br/static/Images/Icones/facebook.svg" alt="Facebook">
-                    </div>
+                    <div class="icon-box"><img src="https://assets.queropassagem.com.br/static/Images/Icones/facebook.svg" alt="Facebook"></div>
                     Continue com o Facebook
                 </button>
-
                 <button class="btn-social" type="button">
-                    <div class="icon-box">
-                        <img src="https://assets.queropassagem.com.br/static/Images/Icones/google.svg" alt="Google">
-                    </div>
+                    <div class="icon-box"><img src="https://assets.queropassagem.com.br/static/Images/Icones/google.svg" alt="Google"></div>
                     Continue com o Google
                 </button>
-
                 <button class="btn-social" type="button">
-                    <div class="icon-box">
-                        <img src="https://www.logo.wine/a/logo/Apple_Inc./Apple_Inc.-Logo.wine.svg" class="img-apple" alt="Apple">
-                    </div>
+                    <div class="icon-box"><img src="https://www.logo.wine/a/logo/Apple_Inc./Apple_Inc.-Logo.wine.svg" style="height: 26px" alt="Apple"></div>
                     Continue com a Apple
                 </button>
             </div>

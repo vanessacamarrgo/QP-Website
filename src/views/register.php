@@ -159,12 +159,12 @@
             <form action="/register" method="POST">
                 <div class="input-group">
                     <label>Nome Completo</label>
-                    <input type="text" name="name" placeholder="Ex: João Silva" required>
+                    <input type="text" name="name" placeholder="Seu nome aqui" required>
                 </div>
 
                 <div class="input-group">
                     <label>E-mail</label>
-                    <input type="email" name="email" placeholder="seu@email.com" required>
+                    <input type="email" name="email" placeholder="seu@gmail.com" required>
                 </div>
 
                 <div class="input-group">
