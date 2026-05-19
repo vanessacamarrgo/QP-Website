@@ -96,7 +96,7 @@ declare(strict_types=1);
                 <div class="date-group">
                     <div class="date-wrapper">
                         <label for="departure">DATA SAÍDA</label>
-                        <input id="departure" type="date" name="departure" value="2026-05-04" />
+                        <input id="departure" type="date" name="departure" value="" />
                     </div>
                     <div class="date-wrapper">
                         <label for="return">DATA RETORNO</label>

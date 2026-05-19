@@ -11,10 +11,6 @@ final class BusCompanyController
 {
     private BusCompanyService $service;
 
-    /**
-     * O Construtor agora é público. Ele não barra ninguém aqui
-     * para permitir que a Home Page funcione para todos.
-     */
     public function __construct(?BusCompanyService $service = null)
     {
         $this->service = $service ?? new BusCompanyService();
@@ -29,7 +25,6 @@ final class BusCompanyController
 
         $emailLogado = strtolower($_SESSION['user_email'] ?? '');
 
-        // Adicionando o terceiro e-mail
         if (
             $emailLogado !== 'adm@gmail.com' &&
             $emailLogado !== 'adm2@gmail.com' &&

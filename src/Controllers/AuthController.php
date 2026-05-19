@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 class AuthController {
 
-    // Mostra a tela de login estilizada
+    // mostra a tela de login estilizada
     public function loginForm() {
         $file = __DIR__ . '/../views/login.php';
 
@@ -16,7 +16,7 @@ class AuthController {
         die("Erro Crítico: O arquivo views/login.php não foi encontrado.");
     }
 
-    // Processa o login
+    // processa o login
     public function authenticate() {
         if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -37,30 +37,26 @@ class AuthController {
             exit;
         }
 
-        // Gravamos das duas formas para garantir que a View ache
         $_SESSION['erro_login_direto'] = 'E-mail ou senha inválidos.';
         \App\Core\View::flash('error', 'E-mail ou senha inválidos.');
 
-        // Força a gravação da sessão antes de redirecionar
         session_write_close();
 
         header('Location: /login');
         exit;
     }
 
-    // Exibe a tela de cadastro
     public function registerForm() {
         $file = __DIR__ . '/../views/register.php';
 
         if (file_exists($file)) {
             include $file;
-            exit; // <--- ISSO AQUI mata o processo e impede o erro da Home!
+            exit;
         } else {
             die("Arquivo não encontrado em: " . $file);
         }
     }
-    // Processa o cadastro REAL
-    // Processa o cadastro REAL
+
     public function register() {
         $name = $_POST['name'] ?? '';
         $email = $_POST['email'] ?? '';
@@ -70,7 +66,6 @@ class AuthController {
             $pdo = getPdo();
             $hash = password_hash($password, PASSWORD_BCRYPT);
 
-            // Ajustado para 3 colunas apenas, removendo a vírgula extra
             $stmt = $pdo->prepare("INSERT INTO tasks.users (name, email, password) VALUES (?, ?, ?)");
 
             try {

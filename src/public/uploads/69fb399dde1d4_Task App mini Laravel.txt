@@ -1,0 +1,3551 @@
+Atue como um Desenvolvedor PHP Sênior especialista em arquitetura MVC e Docker.
+
+CONTEXTO E ARQUITETURA DO PROJETO: Estou trabalhando em um projeto chamado php-task-app. É um sistema em PHP puro (sem frameworks pesados tipo Laravel), estruturado no padrão MVC, rodando em Docker e gerenciando dependências com Composer.
+
+A estrutura exata de pastas que eu tenho é:
+
+
+
+
+
+src/Controllers/ (Controladores Web que retornam Views)
+
+
+
+src/Controllers/Api/ (Controladores exclusivos para respostas JSON/RESTful)
+
+
+
+src/Core/ (Router.php e View.php que gerenciam a renderização)
+
+
+
+src/database/ (db.php com a conexão PDO e init.sql)
+
+
+
+src/Models/ (Classes de dados e queries, ex: Task.php)
+
+
+
+src/public/ (O DocumentRoot do Apache. Contém index.php, api.php, .htaccess e app.css)
+
+
+
+src/routes/ (web.php e api.php para o mapeamento das rotas)
+
+
+
+src/Services/ (Camada de regras de negócio, ex: TaskService.php)
+
+
+
+src/views/ (Arquivos de renderização visual, usando _layout.php como template base)
+
+MEU OBJETIVO AGORA É: Você transformar minha arquitetura de codigo inteira em arquitetura mvc, no caso a arquiteura desejada cujo é essa 
+
+php-task-app/
+├── src/
+│   ├── Controllers/           # Controladores que gerenciam as requisições
+│   │   ├── Api/               # Controladores exclusivos para a API (retornam JSON)
+│   │   │   └── TaskApiController.php
+│   │   └── TaskController.php # Controlador para a web (retorna Views)
+│   ├── Core/                  # Classes base e infraestrutura do sistema
+│   │   ├── Router.php         # Gerenciador de rotas e URLs
+│   │   └── View.php           # Renderizador de HTML/Templates
+│   ├── database/              # Tudo relacionado ao banco de dados
+│   │   ├── db.php             # Conexão PDO
+│   │   └── init.sql           # Script para criar as tabelas iniciais
+│   ├── Models/                # Entidades e comunicação direta com o banco
+│   │   ├── BusCompany.php     # (Possível resquício do projeto antigo, pode deletar se não usar)
+│   │   └── Task.php           # Modelo das Tarefas
+│   ├── public/                # Raiz do servidor web (ÚNICA pasta que o navegador acessa)
+│   │   ├── .htaccess          # Redireciona tudo para o index.php ou api.php
+│   │   ├── api.php            # Ponto de entrada exclusivo para as rotas da API
+│   │   ├── app.css            # Folha de estilos principal
+│   │   └── index.php          # Ponto de entrada principal da aplicação Web
+│   ├── routes/                # Definição das URLs do sistema
+│   │   ├── api.php            # Lista de rotas da API (ex: /api/tasks)
+│   │   └── web.php            # Lista de rotas das páginas (ex: /home, /create)
+│   ├── Services/              # Regras de negócio (A "inteligência" do sistema)
+│   │   └── TaskService.php    # Processa dados antes de salvar no banco ou devolver ao Controller
+│   └── views/                 # Arquivos HTML (misturados com PHP)
+│       ├── _layout.php        # Molde principal (header, body, footer)
+│       ├── create.php         # Tela de criar tarefa
+│       ├── edit.php           # Tela de editar tarefa
+│       └── index.php          # Tela principal (lista de tarefas)
+├── vendor/                    # Pastas de bibliotecas instaladas pelo Composer (ignorada no git)
+├── .gitignore                 # Arquivos que não sobem pro GitHub (ex: /vendor, arquivos .env)
+├── composer.json              # Lista de dependências PHP do projeto
+├── composer.lock              # Trava as versões exatas das dependências do Composer
+├── docker-compose.yml         # Orquestrador dos containers (PHP, MySQL, etc.)
+└── Dockerfile                 # Receita de como montar a imagem do container do PHP
+
+
+
+REGRAS DE DESENVOLVIMENTO (SIGA ESTRITAMENTE):
+
+
+
+
+
+Respeite a separação de responsabilidades do MVC. O Controller recebe a requisição, o Service lida com a regra de negócio, a Model lida com o Banco (PDO) e a View exibe o HTML.
+
+
+
+Como estou usando .htaccess direcionando para a pasta public, qualquer chamada de CSS, JS ou imagens no HTML deve começar obrigatoriamente com a barra raiz (ex: <link rel="stylesheet" href="/app.css">).
+
+
+
+Forneça o código atualizado apenas dos arquivos que precisam ser modificados para cumprir este objetivo. Coloque o caminho do arquivo como comentário no topo do código.
+
+Não quero que mude nada de front, somente arquitetura do codigo
+
+segue o codigo atual do meu projeto sem a estrutura por enquanto
+
+home.js
+
+document.querySelectorAll('.faq-question').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var answer = this.nextElementSibling;
+        var isOpen = this.getAttribute('aria-expanded') === 'true';
+
+        document.querySelectorAll('.faq-question').forEach(function(b) {
+            b.setAttribute('aria-expanded', 'false');
+            b.nextElementSibling.classList.remove('open');
+        });
+
+        if (!isOpen) {
+            this.setAttribute('aria-expanded', 'true');
+            answer.classList.add('open');
+        }
+    });
+});
+
+var btnShowMore = document.getElementById('btn-show-more');
+var isExpanded = false;
+
+btnShowMore.addEventListener('click', function() {
+    var extras = document.querySelectorAll('.faq-extra');
+
+    isExpanded = !isExpanded;
+
+    extras.forEach(function(item) {
+        item.classList.toggle('hidden');
+    });
+
+    btnShowMore.textContent = isExpanded ? 'Ver menos' : 'Ver mais perguntas';
+});
+
+home.php
+
+<?php
+require '../db.php';
+$pdo = $pdo ?? null;
+
+$companies = fetchActiveBusCompanies($pdo);
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quero Passagem: Passagem de ônibus sem sair de casa</title>
+    <link rel="stylesheet" href="styles.css"></head>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"><body>
+
+<!-- header -->
+<header>
+    <div class="header-container">
+        <a href="#" class="logo">
+            <img src="https://assets.queropassagem.com.br/static/Images/Logos/logo_nova_grande.png" alt="Quero Passagem">
+        </a>
+
+        <nav aria-label="Menu principal">
+            <a href="#" class="active">Passagens</a>
+            <a href="#">Hotéis <span class="badge-new">Novo!</span></a>
+        </nav>
+
+        <aside class="header-actions">
+            <button class="btn-help">Central de Ajuda</button>
+            <button class="btn-enter">ENTRAR</button>
+            <form action="/index.php" method="POST">
+                <button type="submit">Painel ADM</button>
+            </form>
+
+            </form>
+        </aside>
+    </div>
+</header>
+
+<!-- banner / busca -->
+<section class="banner" aria-label="Busca de passagens">
+    <div class="container">
+        <article class="banner-content">
+            <form class="search" action="#" method="get">
+                <h2>Comprar Passagens de Ônibus</h2>
+
+                <label for="origin">Partindo de</label>
+                <input id="origin" type="text" name="origin" value="" />
+
+                <label for="destination">Indo para</label>
+                <input id="destination" type="text" name="destination" value="" />
+
+                <fieldset>
+                    <legend class="sr-only">Datas</legend>
+                    <p>
+                        <label for="departure">Data Saída</label>
+                        <input id="departure" type="date" name="departure" value="" />
+                    </p>
+                    <p>
+                        <label for="return">Data Retorno</label>
+                        <input id="return" type="date" name="return" />
+                    </p>
+                </fieldset>
+
+                <button type="submit" class="btn-search">BUSCAR PASSAGEM</button>
+            </form>
+        </article>
+    </div>
+</section>
+
+<!-- barra de confiança -->
+<aside class="trust-bar">
+    <article>
+        <p><strong>Viagens seguras</strong><span>Mais de 30 milhões de compras</span></p>
+    </article>
+    <article>
+        <p><strong>Pagamento</strong><span>Pague com Pix, Nupay ou em até 12x</span></p>
+    </article>
+    <article>
+        <p><strong>Cancelamento</strong><span>Passagens flexíveis e atendimento personalizado</span></p>
+    </article>
+</aside>
+
+<!-- viações -->
+<section class="transport" aria-labelledby="title-transport">
+    <h2 id="title-transport">Passagens de Ônibus Baratas: Viações de Ônibus</h2>
+    <p>A sua passagem de ônibus na viação de sua preferência</p>
+    <ul class="transport-grid">
+        <?php foreach ($companies as $company): ?>
+            <li>
+                <div class="card-logo">
+                    <img src="/<?= $company['logo'] ?>" alt="<?= $company['name'] ?>">
+                </div>
+                <span class="company-name"><?= $company['name'] ?></span>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+</section>
+
+<!-- destinos -->
+<section class="destinations" aria-labelledby="title-destinations">
+    <h2 id="title-destinations">Escolha seu destino</h2>
+    <p>São mais de 5 mil destinos em todo o país para escolher sem sair de casa.</p>
+
+    <ul class="destination-cards">
+
+        <li class="destination-card">
+            <img src="https://assets.queropassagem.com.br/public/Upload/cidades/1a.jpg" alt="São Paulo" />
+            <article>
+                <h3>São Paulo</h3>
+                <table>
+                    <thead>
+                    <tr><th>Partindo de</th><th>A partir de</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>Rio de Janeiro, RJ</td><td>R$ 104</td></tr>
+                    <tr><td>Belo Horizonte, MG</td><td>R$ 139</td></tr>
+                    <tr><td>Ribeirão Preto, SP</td><td>R$ 144</td></tr>
+                    <tr><td>Sorocaba, SP</td><td>R$ 44</td></tr>
+                    </tbody>
+                </table>
+            </article>
+        </li>
+
+        <li class="destination-card">
+            <img src="https://assets.queropassagem.com.br/public/Upload/cidades/57a.jpg" alt="Rio de Janeiro" />
+            <article>
+                <h3>Rio De Janeiro</h3>
+                <table>
+                    <thead>
+                    <tr><th>Partindo de</th><th>A partir de</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>São Paulo, SP</td><td>R$ 104</td></tr>
+                    <tr><td>Belo Horizonte, MG</td><td>R$ 69</td></tr>
+                    <tr><td>Cabo Frio, RJ</td><td>R$ 75</td></tr>
+                    <tr><td>Macaé, RJ</td><td>R$ 89</td></tr>
+                    </tbody>
+                </table>
+            </article>
+        </li>
+
+        <li class="destination-card">
+            <img src="https://assets.queropassagem.com.br/public/Upload/cidades/55a.jpg" alt="Curitiba" />
+            <article>
+                <h3>Curitiba</h3>
+                <table>
+                    <thead>
+                    <tr><th>Partindo de</th><th>A partir de</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>Florianópolis, SC</td><td>R$ 72</td></tr>
+                    <tr><td>Porto Alegre, RS</td><td>R$ 27</td></tr>
+                    <tr><td>Joinville, SC</td><td>R$ 38</td></tr>
+                    <tr><td>Rio de Janeiro, RJ</td><td>R$ 22</td></tr>
+                    </tbody>
+                </table>
+            </article>
+        </li>
+
+        <li class="destination-card">
+            <img src="https://assets.queropassagem.com.br/public/Upload/cidades/64a.jpg" alt="Belo Horizonte" />
+            <article>
+                <h3>Belo Horizonte</h3>
+                <table>
+                    <thead>
+                    <tr><th>Partindo de</th><th>A partir de</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>São Paulo, SP</td><td>R$ 139</td></tr>
+                    <tr><td>Vitória, ES</td><td>R$ 59</td></tr>
+                    <tr><td>Rio de Janeiro, RJ</td><td>R$ 69</td></tr>
+                    <tr><td>Monte Claro, MG</td><td>R$ 69</td></tr>
+                    </tbody>
+                </table>
+            </article>
+        </li>
+
+    </ul>
+
+    <a href="#" class="link-more-destinations">MOSTRE-ME MAIS DESTINOS</a>
+</section>
+
+<!-- banner app -->
+<img src="https://assets.queropassagem.com.br/static/Images/banner_download_app_2.png" alt="Banner" />
+
+<!-- trechos -->
+<section class="routes" aria-labelledby="title-routes">
+    <h2 id="title-routes">Top 15 trechos de ônibus</h2>
+    <p>Os trechos mais procurados em nossa Central de Passagens.</p>
+
+    <ul class="routes-grid">
+        <li>
+            <table>
+                <thead>
+                <tr><th>Partindo de</th><th>Indo para</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>Rio de Janeiro</td><td>São Paulo</td></tr>
+                <tr><td>São Paulo</td><td>Rio de Janeiro</td></tr>
+                <tr><td>São Paulo</td><td>Curitiba</td></tr>
+                <tr><td>Curitiba</td><td>São Paulo</td></tr>
+                <tr><td>Brasília</td><td>Goiânia</td></tr>
+                </tbody>
+            </table>
+        </li>
+        <li>
+            <table>
+                <thead>
+                <tr><th>Partindo de</th><th>Indo para</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>Goiânia</td><td>Brasília</td></tr>
+                <tr><td>São Paulo</td><td>Goiânia</td></tr>
+                <tr><td>Belo Horizonte</td><td>São Paulo</td></tr>
+                <tr><td>Goiânia</td><td>São Paulo</td></tr>
+                <tr><td>São Paulo</td><td>Belo Horizonte</td></tr>
+                </tbody>
+            </table>
+        </li>
+        <li>
+            <table>
+                <thead>
+                <tr><th>Partindo de</th><th>Indo para</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>Florianópolis</td><td>Curitiba</td></tr>
+                <tr><td>São Paulo</td><td>Londrina</td></tr>
+                <tr><td>Porto Alegre</td><td>Curitiba</td></tr>
+                <tr><td>Curitiba</td><td>Florianópolis</td></tr>
+                <tr><td>São Paulo</td><td>Bauru</td></tr>
+                </tbody>
+            </table>
+        </li>
+    </ul>
+</section>
+
+<!-- parceiros -->
+<section class="partners" aria-labelledby="title-partners">
+    <article class="partners-image"></article>
+
+    <article class="partners-info">
+        <article class="partner-type">
+            <p>
+            <h3>Agências de Viagem</h3>
+            Sistema completo de emissão e venda de passagens rodoviárias para agências de viagens.
+            </p>
+        </article>
+
+        <article class="partner-type">
+            <p>
+            <h3>OTA's</h3>
+            Insira nosso banner (buscador de passagens) em seu site e ganhe comissões por cada venda.
+            </p>
+        </article>
+
+        <a href="#" class="btn-learn-more">Saiba mais</a>
+    </article>
+</section>
+
+<!-- newsletter -->
+<section class="newsletter" aria-labelledby="title-newsletter">
+    <h2 id="title-newsletter">Deseja receber e-mails com novidades e descontos exclusivos?</h2>
+
+    <form class="newsletter-form" action="#" method="post">
+        <input id="name-newsletter" type="text" name="name" placeholder="Seu nome" />
+        <input id="email-newsletter" type="email" name="email" placeholder="Seu e-mail" />
+        <button type="submit">Inscreva-se</button>
+    </form>
+</section>
+
+<!-- sobre -->
+<section class="about" aria-labelledby="title-about">
+    <h2 id="title-about">Viajar de ônibus é rápido e fácil com a Quero Passagem</h2>
+    <p>A Quero Passagem é o maior Portal de Passagens de Ônibus do Brasil - sua Central de Passagens Rodoviárias online. Pesquise viações, compare horários, preços e compre passagens rodoviárias sem sair de casa. São mais de 5 mil destinos em todo o país, conectando cidades como Belo Horizonte, Curitiba, Brasília, São Paulo, Rio de Janeiro, Salvador, Goiânia e muito mais.</p>
+
+    <ul class="about-cards">
+        <li>
+            <img src="https://assets.queropassagem.com.br/static/Images/card_pagamento.png" alt="Pagamento" />
+            <p>Escolha a melhor forma de pagamento para você: compre sua passagem de ônibus em até 12x no cartão de crédito ou pague com débito, transferência bancária, boleto ou via Pix.</p>
+        </li>
+        <li>
+            <img src="https://assets.queropassagem.com.br/static/Images/card_onibus.png" alt="Conforto" />
+            <p>Viaje com conforto e segurança nas melhores companhias de ônibus do Brasil, como Viação Cometa, 1001, Catarinense, Itapemirim, Guanabara e outras 350 viações parceiras.</p>
+        </li>
+        <li>
+            <img src="https://assets.queropassagem.com.br/static/Images/card_bilhetes.png" alt="Escolha"
+                 style="background-color: #2764C0;"/>
+            <p>Na Quero Passagem, você escolhe o horário, o assento e a empresa favorita para viajar. Finalize sua compra de passagem rodoviária online de forma rápida, segura e sem complicação.</p>
+        </li>
+        <li>
+            <img src="https://assets.queropassagem.com.br/static/Images/card_praia.png" alt="Confiança" />
+            <p>Confiança de quem já colocou mais de 15 milhões de passageiros na estrada. Compre sua passagem de ônibus em menos de 5 minutos e bora viajar tranquilo.</p>
+        </li>
+    </ul>
+</section>
+
+<!-- faq -->
+<section class="faq" aria-labelledby="title-faq">
+    <h2 id="title-faq">Perguntas frequentes</h2>
+
+    <ul class="faq-list">
+        <li class="faq-item">
+            <button class="faq-question" aria-expanded="false">Quero Passagem é seguro para comprar passagens de ônibus online? <span>&#8964;</span></button>
+            <p class="faq-answer">Sim! Comprar sua passagem pela Quero Passagem é seguro. A plataforma utiliza tecnologia de proteção de dados e pagamentos confiáveis para garantir que suas informações estejam sempre protegidas.</p>
+        </li>
+        <li class="faq-item">
+            <button class="faq-question" aria-expanded="false">Quero Passagem é Confiável? <span>&#8964;</span></button>
+            <p class="faq-answer">Sim! A Quero Passagem conecta você a diversas empresas de ônibus em todo o Brasil, permitindo comparar preços, horários e rotas para escolher a melhor opção.</p>
+        </li>
+        <li class="faq-item">
+            <button class="faq-question" aria-expanded="false">Como fazer o cancelamento da minha passagem de ônibus? <span>&#8964;</span></button>
+            <p class="faq-answer">Basta acessar Minha Conta, localizar sua passagem e seguir as orientações. O pedido deve ser feito antes do horário da viagem e segue as regras da empresa de ônibus.</p>
+        </li>
+        <li class="faq-item">
+            <button class="faq-question" aria-expanded="false">Como e onde vou receber a confirmação de compra da minha passagem de ônibus? <span>&#8964;</span></button>
+            <p class="faq-answer">Assim que o pagamento for aprovado, você recebe um e-mail com todos os detalhes da sua viagem, como dados da passagem, horário e orientações para o embarque.</p>
+        </li>
+        <li class="faq-item">
+            <button class="faq-question" aria-expanded="false">Como alterar a data ou o horário da minha viagem de ônibus? <span>&#8964;</span></button>
+            <p class="faq-answer">Basta acessar Minha Conta, encontrar sua passagem e solicitar a mudança. A alteração depende da disponibilidade de novos horários e das regras da empresa de ônibus.</p>
+        </li>
+        <li class="faq-item">
+            <button class="faq-question" aria-expanded="false">Como usar o ID Jovem na reserva da passagem de ônibus? <span>&#8964;</span></button>
+            <p class="faq-answer">Se você possui o ID Jovem, pode utilizar o benefício em viagens interestaduais. Para a compra, é necessário utilizar o link: https://queropassagem.com.br/gratuidade.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Qual é o melhor app para comprar passagens de ônibus? <span>&#8964;</span></button>
+            <p class="faq-answer">Com o aplicativo da Quero Passagem você pode pesquisar destinos, comparar horários e comprar sua passagem diretamente pelo celular de forma rápida e segura.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Como comprar passagens de ônibus online? <span>&#8964;</span></button>
+            <p class="faq-answer">Informe origem, destino e data; escolha o horário e a empresa; preencha os dados do passageiro e finalize o pagamento. A confirmação chegará por e-mail.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Qual é o telefone e whatsapp da Quero Passagem? <span>&#8964;</span></button>
+            <p class="faq-answer">O número de WhatsApp da Quero Passagem é 11 4680-2994.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Quais são os canais de atendimento da Quero Passagem? <span>&#8964;</span></button>
+            <p class="faq-answer">Você pode falar com a equipe de atendimento pelo chat no Minha Conta, e-mail ou WhatsApp.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Quanto tempo demora para confirmar a passagem de ônibus na Quero Passagem? <span>&#8964;</span></button>
+            <p class="faq-answer">Normalmente a confirmação acontece logo após a aprovação do pagamento.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Quais as regras para viajar com animais de estimação? <span>&#8964;</span></button>
+            <p class="faq-answer">As regras variam por empresa. Em geral, o pet deve estar em caixa de transporte adequada e com a documentação veterinária exigida.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Quais são os documentos necessários para embarcar no ônibus da rodoviária? <span>&#8964;</span></button>
+            <p class="faq-answer">Basta apresentar um documento oficial e físico com foto, como RG, CNH ou passaporte.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Quais são os meios de pagamento aceitos na Quero Passagem? <span>&#8964;</span></button>
+            <p class="faq-answer">São aceitos cartão de crédito, Pix, Boleto, Transferência Bancária, Carteira Digital e outras opções disponíveis no momento da compra.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Posso comprar passagens de ônibus para outras pessoas/terceiros? <span>&#8964;</span></button>
+            <p class="faq-answer">Sim! Basta preencher os dados do passageiro que irá viajar no momento da compra.</p>
+        </li>
+        <li class="faq-item faq-extra hidden">
+            <button class="faq-question" aria-expanded="false">Qual limite de peso e com quantas bagagens eu posso embarcar na minha viagem de ônibus? <span>&#8964;</span></button>
+            <p class="faq-answer">Normalmente é permitido levar até 30 kg no bagageiro e até 5 kg de bagagem de mão, mas as regras podem variar dependendo da empresa de ônibus.</p>
+        </li>
+    </ul>
+
+    <button class="btn-show-more" id="btn-show-more">Ver mais perguntas</button>
+</section>
+
+<!-- footer -->
+<footer>
+
+    <!-- footer: links -->
+    <section class="footer-links">
+        <article class="footer-column">
+            <h4>TOP DESTINOS</h4>
+            <ul>
+                <li><a href="#">Ônibus Rio de Janeiro</a></li>
+                <li><a href="#">Ônibus São Paulo</a></li>
+                <li><a href="#">Ônibus Brasília</a></li>
+                <li><a href="#">Ônibus Campinas</a></li>
+                <li><a href="#">Ônibus Londrina</a></li>
+                <li><a href="#"><strong>+ Destinos</strong></a></li>
+            </ul>
+        </article>
+
+        <article class="footer-column">
+            <h4>TOP VIAÇÕES</h4>
+            <ul>
+                <li><a href="#">Passagens Cometa</a></li>
+                <li><a href="#">Passagens Gontijo</a></li>
+                <li><a href="#">Passagens 1001</a></li>
+                <li><a href="#">Passagens Águia Branca</a></li>
+                <li><a href="#">Passagens Pássaro Marron</a></li>
+                <li><a href="#"><strong>+ Viações</strong></a></li>
+            </ul>
+        </article>
+
+        <article class="footer-column">
+            <h4>TOP RODOVIÁRIAS</h4>
+            <ul>
+                <li><a href="#">Rodoviária São Paulo - Tietê</a></li>
+                <li><a href="#">Rodoviária Rio de Janeiro - Novo Rio</a></li>
+                <li><a href="#">Rodoviária Belo Horizonte - Gov. Israel Pinheiro (Tergip)</a></li>
+                <li><a href="#">Rodoviária Curitiba</a></li>
+                <li><a href="#">Rodoviária São Paulo - Barra Funda</a></li>
+                <li><a href="#"><strong>+ Rodoviárias</strong></a></li>
+            </ul>
+        </article>
+    </section>
+
+    <!-- footer: info -->
+    <section class="footer-info">
+        <article class="footer-about">
+            <img src="https://assets.queropassagem.com.br/static/Images/Logos/logo_nova_grande.png" alt="Quero Passagem" />
+            <p><strong>Na Quero Passagem sua compra é totalmente segura!</strong></p>
+            <p>Para garantirmos que seus dados estejam sempre protegidos, não armazenamos nenhuma informação do cartão de crédito utilizado, seguindo os protocolos de criptografia e de segurança das principais instituições bancárias do Brasil.</p>
+        </article>
+
+        <nav class="footer-nav" aria-label="Links institucionais">
+            <a href="#">Sobre nós</a>
+            <a href="#">Atendimento Online</a>
+            <a href="#">Afiliados</a>
+            <a href="#">Termos de uso</a>
+            <a href="#">Trabalhe Conosco</a>
+            <a href="#">Versão Mobile</a>
+            <a href="#">Política de privacidade</a>
+            <a href="#">Gratuidade</a>
+            <a href="#">Rodomilhas</a>
+            <a href="#">Termos de Uso Louge Vip</a>
+            <a href="#">Auto Viações</a>
+            <a href="#">Viajo Mucho</a>
+            <a href="#">Imprensa</a>
+            <a href="#">Rodoviárias</a>
+            <a href="#">La terminal Costa Rica</a>
+            <a href="#">Minha Conta</a>
+            <a href="#">Destinos</a>
+        </nav>
+    </section>
+
+    <!-- footer: redes sociais e grupo -->
+    <section class="footer-social-group">
+        <article class="footer-social">
+            <p>SIGA NOSSAS REDES SOCIAIS:</p>
+            <ul>
+                <img src="https://media.discordapp.net/attachments/1491487629529841754/1492134134791798885/insta.png?ex=69f1f4b4&is=69f0a334&hm=56b04064e1fd0e5c5c828e2eae4a60584ee5b1ed557b24b6ae9598d39978d7d0&=&format=webp&quality=lossless" alt="Insta">
+                <img src="https://media.discordapp.net/attachments/1491487629529841754/1492134135647436950/youtube.png?ex=69f1f4b4&is=69f0a334&hm=2a0f002749eb3c267d6199e69088ea080a66890905d1e5ec4156a6230274d05c&=&format=webp&quality=lossless" alt="Youtube">
+                <img src="https://media.discordapp.net/attachments/1491487629529841754/1492134135374811296/face.png?ex=69f1f4b4&is=69f0a334&hm=b0af6be7d516590648e54879ad6726dd09e1d0b65f465327b9526f84ca7168c4&=&format=webp&quality=lossless" alt="Facebook">
+                <img src="https://media.discordapp.net/attachments/1491487629529841754/1492134135085662359/linkedin.png?ex=69f1f4b4&is=69f0a334&hm=8b0eb9bc50f2554abc375f0f5a480c9c8ae8be44d85706675f5f1de19f769acc&=&format=webp&quality=lossless" alt="Linkedin">
+            </ul>
+        </article>
+
+        <article class="footer-group">
+            <p>CONHEÇA O GRUPO QP:</p>
+            <ul>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/rodoviaria-online.svg" alt="Rodon" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/viajo-mucho.svg" alt="Viajo Mucho" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/la-terminal.svg" alt="La Terminal" /></li>
+            </ul>
+        </article>
+    </section>
+
+    <!-- footer: pagamentos e segurança -->
+    <section class="footer-payments">
+        <article>
+            <p>FORMAS DE PAGAMENTO</p>
+            <ul>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/mastercard.svg" alt="Mastercard" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/visa.svg" alt="Visa" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/hipercard.svg" alt="Hipercard" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/american.svg" alt="American Express" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/elo.svg" alt="Elo" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/pix.svg" alt="Pix" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/mercado-pago.svg" alt="Mercado Pago" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/boleto.png" alt="Boleto" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/Pagamento/nupay.svg" alt="NuPay" /></li>
+            </ul>
+        </article>
+
+        <article>
+            <p>SEGURANÇA</p>
+            <ul>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Logos/cadastur.svg" alt="Cadastur" /></li>
+                <li><img src="https://assets.queropassagem.com.br/static/Images/Icones/compra-segura.png" alt="Compra Segura" /></li>
+            </ul>
+        </article>
+    </section>
+
+    <!-- footer: copyright -->
+    <section class="footer-copy">
+        <p>Calçada das Margaridas, 163 - Sala 02 - Condomínio Centro Comercial Alphaville, Barueri - SP | CEP: 06453-038 | CNPJ: 18.087.991/0001-57 | saconibus@queropassagem.com.br</p>
+        <p>Copyright 2026 © QueroPassagem.com.br</p>
+    </section>
+
+</footer>
+
+<script src="home.js"></script>
+
+</body>
+</html>
+
+
+
+script.js
+
+// dados virão do HTML
+var allNames = window.allNames || [];
+
+var filterInput  = document.getElementById('filter-name');
+var autocompleteList  = document.getElementById('autocompleteList');
+var highlightedIndex = -1;
+
+filterInput.addEventListener('input', function () {
+    var typed = this.value.trim().toLowerCase();
+    autocompleteList.innerHTML = '';
+    highlightedIndex = -1;
+
+    if (typed.length === 0) {
+        autocompleteList.style.display = 'none';
+        return;
+    }
+
+    var matches = allNames.filter(function (name) {
+        return name.toLowerCase().includes(typed);
+    });
+
+    if (matches.length === 0) {
+        autocompleteList.style.display = 'none';
+        return;
+    }
+
+    matches.forEach(function (name, index) {
+        var item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.textContent = name;
+
+        item.addEventListener('mousedown', function () {
+            filterInput.value = name;
+            autocompleteList.style.display = 'none';
+        });
+
+        autocompleteList.appendChild(item);
+    });
+
+    autocompleteList.style.display = 'block';
+});
+
+filterInput.addEventListener('keydown', function (e) {
+    var items = autocompleteList.querySelectorAll('.autocomplete-item');
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        highlightedIndex = (highlightedIndex + 1) % items.length;
+        updateHighlight(items);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
+        updateHighlight(items);
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+        e.preventDefault();
+        filterInput.value = items[highlightedIndex].textContent;
+        autocompleteList.style.display = 'none';
+        highlightedIndex = -1;
+    } else if (e.key === 'Escape') {
+        autocompleteList.style.display = 'none';
+        highlightedIndex = -1;
+    }
+});
+
+function updateHighlight(items) {
+    items.forEach(function (item, i) {
+        item.classList.toggle('highlighted', i === highlightedIndex);
+    });
+}
+
+document.addEventListener('click', function (e) {
+    if (!filterInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+        autocompleteList.style.display = 'none';
+    }
+});
+
+// MODAL
+function openDeleteModal(deleteUrl) {
+    document.getElementById('deleteConfirmLink').href = deleteUrl;
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+}
+
+document.getElementById('deleteModal').addEventListener('click', function (e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+
+
+styles.css
+
+/* ===========================
+   RESET & VARIABLES
+=========================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+:root {
+    --blue-dark:  #1a2e6e;
+    --blue-main:  #1a2e6e;
+    --blue-light: #e8eeff;
+    --yellow:     #f5c518;
+    --text-dark:  #1a1a1a;
+    --text-gray:  #46484d;
+    --border:     #e5e7eb;
+    --white:      #ffffff;
+    --bg-light:   #f5f7fa;
+}
+
+body {
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+
+a { text-decoration: none; color: inherit; }
+
+
+header {
+    padding: 15px 60px;
+    background: var(--white);
+    border-bottom: 1px solid #eee;
+}
+
+.logo img {
+    height: 60px;
+}
+
+header nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+header nav a {
+    text-decoration: none;
+    color: #333;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Sora', sans-serif;
+    font-weight: bold;
+
+
+}
+
+header nav a.active {
+    color: var(--blue-main);
+    font-weight: bold;
+
+}
+
+.badge-new {
+    background: #22c55e;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 5px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-actions button {
+    padding: 8px 14px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Sora', sans-serif;
+    font-weight: bold;
+}
+
+.btn-help {
+    background: transparent;
+    color: #333;
+}
+
+.btn-enter {
+    background: var(--blue-main);
+    color: white;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+
+.banner {
+    background: url('https://assets.queropassagem.com.br/public/Upload/fundo/home_fundo_1.jpg') center/cover no-repeat;
+    padding: 37px
+}
+
+.banner-content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    margin: auto;
+    max-width: 1400px;
+    padding: 0 120px;
+}
+.header-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.search {
+    background: #0a2a66;
+    padding: 25px;
+    border-radius: 12px;
+    width: 350px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.search h2 {
+    margin-bottom: 15px;
+    font-size: 16px;
+    text-align: center;
+    font-family: 'Sora', sans-serif;
+}
+
+.search label {
+    font-size: 12px;
+    display: block;
+    margin-bottom: 4px;
+    color: #aabce8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search input {
+    width: 100%;
+    padding: 10px;
+    margin: 0 0 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 14px;
+    outline: none;
+}
+
+fieldset {
+    display: flex;
+    gap: 10px;
+    border: none;
+    margin-bottom: 10px;
+}
+
+fieldset p {
+    flex: 1;
+}
+
+fieldset input {
+    margin-bottom: 0 !important;
+}
+
+.btn-search {
+    width: 100%;
+    padding: 12px;
+    background: var(--blue-main);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    transition: background 0.2s;
+    font-family: 'Sora', sans-serif;
+}
+
+.btn-search:hover {
+    background: #1d4ed8;
+}
+
+
+.trust-bar {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 60px;
+}
+
+.trust-bar p {
+    display: flex;
+    flex-direction: column;
+}
+
+.trust-bar p strong {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dark);
+    font-family: 'Sora', sans-serif;
+}
+
+.trust-bar p span {
+    font-size: 12px;
+    color: #555;
+}
+
+
+.transport {
+    background: var(--white);
+    text-align: center;
+    padding: 40px 60px;
+}
+
+.transport h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0D2240;
+    font-family: 'Sora', sans-serif;
+    margin-bottom: 6px;
+}
+
+.transport p {
+    color: var(--text-gray);
+    margin-bottom: 30px;
+}
+
+.transport-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.transport-grid li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-logo {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px;
+    border: 2px solid rgba(0, 0, 0, 0.030);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 120px;
+    transition: transform 0.35s ease, box-shadow 0.35s ease, border 0.35s ease;
+}
+
+.card-logo img {
+    max-height: 80px;
+    object-fit: contain;
+}
+
+.card-logo:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    border-color: #e5e5e5;
+}
+
+.transport-grid img {
+    height: 80px;
+    width: 100%;
+    max-width: 140px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.transport-grid span {
+    font-family: 'Sora', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #63656B;
+    text-align: center;
+}
+
+
+
+
+.destinations {
+    background: var(--bg-light);
+    padding: 40px 60px;
+    text-align: center;
+}
+
+.destinations h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0D2240;
+    font-family: 'Sora', sans-serif;
+    margin-bottom: 6px;
+}
+
+.destinations p {
+    color: var(--text-gray);
+    margin-bottom: 30px;
+}
+
+.destination-cards {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.destination-card {
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    text-align: left;
+}
+
+.destination-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.destination-card article {
+    padding: 15px;
+}
+
+.destination-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0D2240;
+    font-family: 'Sora', sans-serif;
+    margin-bottom: 10px;
+    border-bottom: 2px solid rgba(0,0,0,0.03);
+}
+
+.destination-card table {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+}
+
+.destination-card th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-gray);
+    padding: 4px 0 5px;
+    text-align: left;
+}
+
+.destination-card th:last-child {
+    text-align: right;
+}
+
+.destination-card td {
+    padding: 5px 0;
+    color: var(--text-dark);
+}
+
+.destination-card td:last-child {
+    text-align: right;
+    font-weight: bold;
+    color: var(--text-dark);
+}
+
+.link-more-destinations {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--blue-main);
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.link-more-destinations:hover {
+    border-bottom-color: var(--blue-main);
+}
+
+/* ===========================
+   BANNER APP
+=========================== */
+img[alt="Banner"] {
+    width: 100%;
+    display: block;
+}
+
+
+.routes {
+    background: var(--white);
+    padding: 40px 60px;
+    text-align: center;
+}
+
+.routes h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0D2240;
+    margin-bottom: 6px;
+    font-family: 'Sora', sans-serif;
+}
+
+.routes > p {
+    color: var(--text-gray);
+    margin-bottom: 30px;
+}
+
+.routes-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.routes-grid li {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    background: var(--white);
+}
+
+.routes-grid table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.routes-grid th {
+    color: var(--text-gray);
+    font-size: 12px;
+    font-weight: 600;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(0,0,0,0.03);
+    text-align: left;
+}
+
+.routes-grid td {
+    padding: 10px 0;
+    border-bottom: 2px solid rgba(0,0,0,0.03);
+    color: var(--text-dark);
+}
+
+.routes-grid td:last-child {
+    font-weight: 500;
+}
+
+
+.partners {
+    background: var(--bg-light);
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    padding: 52px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.partners-image {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 500px;
+    height: 240px;
+    background: url('https://assets.queropassagem.com.br/static/Images/parceiro.png') center/cover no-repeat;
+}
+
+.partners-info {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.partner-type h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0D2240;
+    margin-bottom: 4px;
+    font-family: 'Sora', sans-serif;
+}
+
+.partner-type p {
+    font-size: 14px;
+    color: var(--text-gray);
+    line-height: 1.5;
+}
+
+.btn-learn-more {
+    display: inline-block;
+    background: #f3f4f6;
+    color: black;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-align: center;
+    width: 250px;
+    transition: background 0.2s;
+}
+
+.btn-learn-more:hover {
+    background: var(--blue-dark);
+    color: white;
+}
+
+
+.newsletter {
+    background: var(--bg-light);
+    padding: 52px 40px;
+    text-align: center;
+}
+
+.newsletter h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0D2240;
+    margin-bottom: 28px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: 'Sora', sans-serif;
+}
+
+.newsletter-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.newsletter-form input {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    padding: 11px 16px;
+    outline: none;
+    width: 240px;
+    transition: border 0.2s;
+    background: white;
+
+}
+
+.newsletter-form input:focus {
+    border-color: var(--blue-main);
+}
+
+.newsletter-form button {
+    color: black;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.newsletter-form button:hover {
+    background: var(--blue-dark);
+    color: white;
+}
+
+
+.about {
+    background: var(--white);
+    padding: 52px 60px;
+    text-align: center;
+}
+
+.about h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0D2240;
+    font-family: 'Sora', sans-serif;
+    margin-bottom: 16px;
+}
+
+.about > p {
+    font-size: 15px;
+    color: var(--text-gray);
+    max-width: 700px;
+    margin: 0 auto 36px;
+    line-height: 1.6;
+}
+
+.about-cards {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.about-cards li {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    text-align: center;
+    width: 250px;
+}
+
+.about-cards li img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.about-cards li p {
+    font-size: 13px;
+    color: var(--text-dark);
+    padding: 16px;
+    line-height: 1.6;
+}
+
+
+.faq {
+    background: var(--bg-light);
+    padding: 52px 60px;
+    text-align: center;
+}
+
+.faq h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0D2240;
+    font-family: 'Sora', sans-serif;
+    margin-bottom: 32px;
+}
+
+.faq-list {
+    list-style: none;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.faq-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 16px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark);
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.faq-question span {
+    font-size: 18px;
+    color: var(--text-gray);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+}
+
+.faq-question[aria-expanded="true"] span {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    font-size: 14px;
+    color: var(--text-gray);
+    padding: 0 20px;
+    line-height: 1.6;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.faq-answer.open {
+    max-height: 200px;
+    padding: 0 20px 16px;
+}
+
+.hidden {
+    display: none;
+}
+
+.btn-show-more {
+    display: block;
+    margin: 28px auto 0;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-show-more:hover {
+    background: var(--blue-dark);
+    color: white;
+}
+
+
+footer {
+    margin-top: 0;
+}
+
+.footer-links {
+    background: #0d1b3e;
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    padding: 52px 60px;
+}
+
+.footer-column h4 {
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+    font-family: 'Sora', sans-serif;
+}
+
+.footer-column ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-column ul li a {
+    color: #a0b0cc;
+    font-size: 14px;
+    transition: color 0.2s;
+
+}
+
+.footer-column ul li a:hover {
+    color: white;
+}
+
+.footer-column ul li a strong {
+    color: white;
+    font-family: 'Sora', sans-serif;
+}
+
+.footer-info {
+    background: var(--white);
+    display: flex;
+    justify-content: center;
+    gap: 300px;
+    padding: 52px 60px;
+    margin: 0 auto;
+}
+
+.footer-about {
+    max-width: 300px;
+}
+
+.footer-about img {
+    height: 60px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.footer-about p {
+    font-size: 18px;
+    color: var(--text-gray);
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.footer-nav {
+    display: grid;
+    grid-template-columns: repeat(3, 160px);
+    gap: 12px 61px;
+    padding: 30px;
+    margin-top: 50px;
+}
+
+.footer-nav a {
+    font-size: 18px;
+    color: var(--text-gray);
+    transition: color 0.2s;
+}
+
+.footer-nav a:hover {
+    color: var(--blue-main);
+}
+
+.footer-social-group {
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 540px;
+    padding: 20px 60px 40px;
+    margin: 0 auto;
+}
+.footer-social p,
+.footer-group p{
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    font-family: 'Sora', sans-serif;
+    display: flex;
+}
+
+
+
+.footer-social ul,
+.footer-group ul {
+    list-style: none;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.footer-social ul img {
+    height: 30px;
+    object-fit: contain;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.footer-social ul img:hover {
+    opacity: 0.7;
+}
+
+.footer-group ul li img {
+    height: 28px;
+    object-fit: contain;
+}
+
+.footer-payments {
+    background: var(--white);
+    border-top: 1px solid var(--text-dark);
+    display: flex;
+    justify-content: center;
+    gap: 440px;
+    padding: 24px 60px;
+    margin: 0 auto;
+}
+
+.footer-payments p {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    font-family: 'Sora', sans-serif;
+}
+
+.footer-payments ul {
+    list-style: none;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.footer-payments ul li img {
+    height: 30px;
+    object-fit: contain;
+}
+
+.footer-copy {
+    background: var(--white);
+    text-align: center;
+    padding: 20px 40px;
+}
+
+.footer-copy p {
+    font-size: 12px;
+    color: var(--text-gray);
+    margin-bottom: 4px;
+}
+
+
+
+@media (max-width: 1024px) {
+
+    .container,
+    .header-container {
+        padding: 0 20px;
+    }
+
+    .footer-info,
+    .footer-social-group,
+    .footer-payments {
+        flex-direction: column;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .partners {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .partners-image {
+        min-width: 100%;
+    }
+
+    .routes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .carriers-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .destination-cards {
+        flex-wrap: wrap;
+    }
+}
+
+
+@media (max-width: 768px) {
+
+    header {
+        padding: 15px 20px;
+    }
+
+    .header-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    header nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .banner {
+        padding: 40px 20px;
+    }
+
+    .search {
+        width: 100%;
+    }
+
+    .trust-bar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .carriers-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .routes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .destination-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .destination-card {
+        width: 100%;
+        max-width: 350px;
+    }
+
+    .about-cards {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .footer-nav {
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 20px;
+    }
+
+    .newsletter-form {
+        flex-direction: column;
+    }
+
+    .newsletter-form input {
+        width: 100%;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .carriers-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .search {
+        padding: 20px;
+    }
+
+    .btn-search {
+        font-size: 13px;
+    }
+
+    .faq {
+        padding: 40px 20px;
+    }
+
+    .about {
+        padding: 40px 20px;
+    }
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+form.php
+
+<?php
+?>
+
+
+<div class="form-group">
+    <label for="logo">Logo</label>
+    <input
+            type="file"
+            id="logo"
+            name="logo"
+            accept="image/png, image/jpeg"
+    >
+</div>
+
+
+<div class="form-group">
+    <label for="name">Nome da Viação</label>
+    <input
+            type="text"
+            id="name"
+            name="name"
+            value="<?= htmlspecialchars($busCompany['name'] ?? '') ?>"
+            placeholder="Ex: Viação Cometa"
+            required
+    >
+</div>
+
+<div class="form-group">
+    <label for="url">URL do Site</label>
+    <input
+            type="url"
+            id="url"
+            name="url"
+            value="<?= htmlspecialchars($busCompany['url'] ?? '') ?>"
+            placeholder="Ex: https://www.viacaocometa.com.br"
+            required
+    >
+</div>
+
+<div class="form-group">
+    <label for="city">Cidade</label>
+    <input
+            type="text"
+            id="city"
+            name="city"
+            value="<?= htmlspecialchars($busCompany['city'] ?? '') ?>"
+            placeholder="Ex: São Paulo"
+            required
+    >
+</div>
+
+<div class="form-group">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+        <option value="active"   <?= ($busCompany['status'] ?? 'active') === 'active'   ? 'selected' : '' ?>>Ativo</option>
+        <option value="inactive" <?= ($busCompany['status'] ?? '')        === 'inactive' ? 'selected' : '' ?>>Inativo</option>
+    </select>
+</div>
+
+
+create.php
+
+<?php
+
+require_once 'db.php';
+$pdo = $pdo ?? null;
+
+$errors = [];
+$busCompany = [];
+
+function validateBusCompanyForm(array $formData): array
+{
+    $errors = [];
+
+    if (empty(trim($formData['name']))) {
+        $errors[] = 'O nome da viação é obrigatório.';
+    }
+
+    if (empty(trim($formData['url']))) {
+        $errors[] = 'A URL é obrigatória.';
+    } elseif (!filter_var($formData['url'], FILTER_VALIDATE_URL)) {
+        $errors[] = 'A URL informada não é válida.';
+    }
+
+    if (empty(trim($formData['city']))) {
+        $errors[] = 'A cidade é obrigatória.';
+    }
+
+    if (!in_array($formData['status'], ['active', 'inactive'])) {
+        $errors[] = 'Status inválido.';
+    }
+
+    return $errors;
+}
+
+function uploadLogo(): ?string
+{
+    if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== 0) {
+        return null;
+    }
+
+    $file = $_FILES['logo'];
+    $allowed = ['image/jpeg', 'image/png', 'image/jpg'];
+
+    if (!in_array($file['type'], $allowed)) {
+        return null;
+    }
+
+    if ($file['size'] > 2 * 1024 * 1024) {
+        return null;
+    }
+
+    $name = uniqid() . '_' . basename($file['name']);
+    $path = 'uploads/' . $name;
+
+    move_uploaded_file($file['tmp_name'], $path);
+
+    return $path;
+}
+
+function saveBusCompany(PDO $pdo, array $formData): void
+{
+    $stmt = $pdo->prepare("
+        INSERT INTO bus_companies (name, url, city, status, logo)
+        VALUES (:name, :url, :city, :status, :logo)
+    ");
+
+    $stmt->execute([
+            ':name'   => $formData['name'],
+            ':url'    => $formData['url'],
+            ':city'   => $formData['city'],
+            ':status' => $formData['status'],
+            ':logo'   => $formData['logo'],
+    ]);
+}
+
+function logAction(PDO $pdo, int $id, string $action, ?string $old = null, ?string $new = null): void
+{
+    $stmt = $pdo->prepare("
+        INSERT INTO bus_company_logs (bus_company_id, action, old_value, new_value)
+        VALUES (:id, :action, :old, :new)
+    ");
+
+    $stmt->execute([
+            ':id' => $id,
+            ':action' => $action,
+            ':old' => $old,
+            ':new' => $new
+    ]);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $logo = uploadLogo();
+
+    $formData = [
+            'name'   => trim($_POST['name'] ?? ''),
+            'url'    => trim($_POST['url'] ?? ''),
+            'city'   => trim($_POST['city'] ?? ''),
+            'status' => trim($_POST['status'] ?? 'active'),
+            'logo'   => $logo
+    ];
+
+    $errors = validateBusCompanyForm($formData);
+
+    if (empty($errors)) {
+
+        saveBusCompany($pdo, $formData);
+
+        $id = $pdo->lastInsertId();
+
+        $newData = ['id' => $id] + $formData;
+
+        logAction($pdo, $id, 'create', null, json_encode($newData));
+
+        header('Location: index.php');
+        exit;
+    }
+
+    $busCompany = $formData;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Nova Viação</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+        }
+
+        /* HEADER */
+        .header {
+            width: 90%;
+            margin: 30px auto 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* BOTÕES */
+        .btn {
+            background: #1a2e6e;
+            color: white;
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: bold;
+            transition: all 0.25s ease;
+        }
+
+        .btn:hover {
+            background: #2d5bff;
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-cancel {
+            background: gray;
+        }
+
+        .btn-cancel:hover {
+            background: #555;
+        }
+
+        /* CONTAINER */
+        .container {
+            width: 90%;
+            max-width: 650px;
+            margin: auto;
+        }
+
+        /* CARD */
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        /* FORM */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+
+            transition: 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: #1a2e6e;
+            box-shadow: 0 0 5px rgba(26,46,110,0.3);
+            outline: none;
+        }
+
+        /* ACTIONS */
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ERROS */
+        .error-list {
+            background: #ffe5e5;
+            border: 1px solid red;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Nova Viação</h1>
+    <a href="index.php" class="btn">Voltar</a>
+</div>
+
+<div class="container">
+
+    <?php if (!empty($errors)): ?>
+        <div class="error-list">
+            <?php foreach ($errors as $error): ?>
+                <div><?= htmlspecialchars($error) ?></div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" enctype="multipart/form-data" class="form-card">
+        <?php require 'partials/form.php'; ?>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Salvar</button>
+            <a href="index.php" class="btn btn-cancel">Cancelar</a>
+        </div>
+
+    </form>
+
+</div>
+
+</body>
+</html>
+
+
+db.php
+
+<?php
+
+$host     = 'db';
+$database = 'viacoes';
+$username = 'app';
+$password = 'app123';
+
+try {
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$database;charset=utf8",
+        $username,
+        $password
+    );
+
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    $pdo->exec("SET time_zone='-03:00'");
+
+} catch (PDOException $error) {
+    die("Erro ao conectar com o banco de dados: " . $error->getMessage());
+}
+
+function fetchActiveBusCompanies(PDO $pdo): array
+{
+    $cacheDir = __DIR__ . '/cache';
+    $cacheFile = $cacheDir . '/companies.json';
+
+    // cria pasta se não existir
+    if (!is_dir($cacheDir)) {
+        mkdir($cacheDir, 0777, true);
+    }
+
+    if (file_exists($cacheFile) && time() - filemtime($cacheFile) < 30) {
+        return json_decode(file_get_contents($cacheFile), true);
+    }
+    // busca no banco
+    $stmt = $pdo->query("
+        SELECT name, logo 
+        FROM bus_companies
+        WHERE status = 'active'
+        ORDER BY name ASC
+    ");
+
+    $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // salva cache
+    file_put_contents($cacheFile, json_encode($data));
+
+    return $data;
+}
+
+delete.php
+
+<?php
+
+require 'db.php';
+$pdo = $pdo ?? null;
+
+//remove uma viacao do banco pelo ID e redireciona para a listagem
+function deleteBusCompany(PDO $pdo, int $id): void
+{
+    $statement = $pdo->prepare("
+        DELETE FROM bus_companies
+        WHERE id = :id
+    ");
+
+    $statement->execute([':id' => $id]);
+}
+
+$busCompanyId = (int) ($_GET['id'] ?? 0);
+
+if ($busCompanyId === 0) {
+    header('Location: index.php');
+    exit;
+}
+
+$stmt = $pdo->prepare("SELECT * FROM bus_companies WHERE id = :id");
+$stmt->execute([':id' => $busCompanyId]);
+$oldData = $stmt->fetch();
+deleteBusCompany($pdo, $busCompanyId);
+
+logAction(
+    $pdo,
+    $busCompanyId,
+    'delete',
+    json_encode($oldData),
+    null
+);
+header('Location: index.php');
+exit;
+header  ('Location: index.php');
+exit;
+
+function logAction(PDO $pdo, int $id, string $action, ?string $old = null, ?string $new = null): void
+{
+    $stmt = $pdo->prepare("
+        INSERT INTO bus_company_logs (bus_company_id, action, old_value, new_value)
+        VALUES (:id, :action, :old, :new)
+    ");
+
+    $stmt->execute([
+        ':id' => $id,
+        ':action' => $action,
+        ':old' => $old,
+        ':new' => $new
+    ]);
+}
+
+edit.php
+
+<?php
+
+require 'db.php';
+$pdo = $pdo ?? null;
+
+$errors = [];
+
+function fetchBusCompanyById(PDO $pdo, int $id): array|false
+{
+    $stmt = $pdo->prepare("SELECT * FROM bus_companies WHERE id = :id");
+    $stmt->execute([':id' => $id]);
+    return $stmt->fetch();
+}
+
+function uploadLogo(): ?string
+{
+    if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== 0) {
+        return null;
+    }
+
+    $file = $_FILES['logo'];
+    $allowed = ['image/jpeg', 'image/png', 'image/jpg'];
+
+    if (!in_array($file['type'], $allowed)) {
+        return null;
+    }
+
+    if ($file['size'] > 2 * 1024 * 1024) {
+        return null;
+    }
+
+    $name = uniqid() . '_' . basename($file['name']);
+    $path = 'uploads/' . $name;
+
+    move_uploaded_file($file['tmp_name'], $path);
+
+    return $path;
+}
+
+function validateBusCompanyForm(array $formData): array
+{
+    $errors = [];
+
+    if (empty(trim($formData['name']))) $errors[] = 'Nome obrigatório.';
+    if (empty(trim($formData['url'])) || !filter_var($formData['url'], FILTER_VALIDATE_URL)) $errors[] = 'URL inválida.';
+    if (empty(trim($formData['city']))) $errors[] = 'Cidade obrigatória.';
+    if (!in_array($formData['status'], ['active', 'inactive'])) $errors[] = 'Status inválido.';
+
+    return $errors;
+}
+
+function updateBusCompany(PDO $pdo, int $id, array $formData, ?string $logo): void
+{
+    if ($logo) {
+        $sql = "UPDATE bus_companies SET name=:name,url=:url,city=:city,status=:status,logo=:logo WHERE id=:id";
+    } else {
+        $sql = "UPDATE bus_companies SET name=:name,url=:url,city=:city,status=:status WHERE id=:id";
+    }
+
+    $stmt = $pdo->prepare($sql);
+
+    $params = [
+            ':name' => $formData['name'],
+            ':url' => $formData['url'],
+            ':city' => $formData['city'],
+            ':status' => $formData['status'],
+            ':id' => $id
+    ];
+
+    if ($logo) $params[':logo'] = $logo;
+
+    $stmt->execute($params);
+}
+
+function logAction(PDO $pdo, int $id, string $action, ?string $old = null, ?string $new = null): void
+{
+    $stmt = $pdo->prepare("
+        INSERT INTO bus_company_logs (bus_company_id, action, old_value, new_value)
+        VALUES (:id, :action, :old, :new)
+    ");
+
+    $stmt->execute([
+            ':id' => $id,
+            ':action' => $action,
+            ':old' => $old,
+            ':new' => $new
+    ]);
+}
+
+$busCompanyId = (int) ($_GET['id'] ?? 0);
+$busCompany = fetchBusCompanyById($pdo, $busCompanyId);
+
+if (!$busCompany) {
+    header('Location: index.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $logo = uploadLogo();
+
+    $formData = [
+            'name'   => trim($_POST['name'] ?? ''),
+            'url'    => trim($_POST['url'] ?? ''),
+            'city'   => trim($_POST['city'] ?? ''),
+            'status' => trim($_POST['status'] ?? 'active'),
+    ];
+
+    $errors = validateBusCompanyForm($formData);
+
+    if (empty($errors)) {
+
+        $oldData = $busCompany;
+        $oldData['id'] = $busCompanyId;
+
+        $newData = ['id' => $busCompanyId] + $formData;
+
+        updateBusCompany($pdo, $busCompanyId, $formData, $logo);
+
+        $stmt = $pdo->prepare("SELECT * FROM bus_companies WHERE id = ?");
+        $stmt->execute([$busCompanyId]);
+        $updatedBusCompany = $stmt->fetch();
+
+        logAction(
+                $pdo,
+                $busCompanyId,
+                'update',
+                json_encode($oldData),
+                json_encode($updatedBusCompany)
+        );
+
+        header('Location: index.php');
+        exit;
+    }
+
+    $busCompany = array_merge($busCompany, $formData);
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Viação</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+        }
+
+        /* HEADER */
+        .header {
+            width: 90%;
+            margin: 30px auto 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* BOTÕES */
+        .btn {
+            background: #1a2e6e;
+            color: white;
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: bold;
+            transition: all 0.25s ease;
+        }
+
+        .btn:hover {
+            background: #2d5bff;
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-cancel {
+            background: gray;
+        }
+
+        .btn-cancel:hover {
+            background: #555;
+        }
+
+        /* CONTAINER */
+        .container {
+            width: 90%;
+            max-width: 650px;
+            margin: auto;
+        }
+
+        /* CARD */
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        /* FORM */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: #1a2e6e;
+            box-shadow: 0 0 5px rgba(26,46,110,0.3);
+            outline: none;
+        }
+
+        /* ACTIONS */
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ERROS */
+        .error-list {
+            background: #ffe5e5;
+            border: 1px solid red;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Editar Viação</h1>
+    <a href="index.php" class="btn">Voltar</a>
+</div>
+
+<div class="container">
+
+    <?php if (!empty($errors)): ?>
+        <div class="error-list">
+            <?php foreach ($errors as $error): ?>
+                <div><?= htmlspecialchars($error) ?></div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" enctype="multipart/form-data" class="form-card">
+        <?php require 'partials/form.php'; ?>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Salvar</button>
+            <a href="index.php" class="btn btn-cancel">Cancelar</a>
+        </div>
+
+    </form>
+
+</div>
+
+</body>
+</html>
+
+index.php
+
+<?php
+
+require 'db.php';
+$pdo = $pdo ?? null;
+
+// Busca viações com filtros opcionais de nome e status
+function fetchAllBusCompanies(PDO $pdo, string $filterName = '', string $filterStatus = ''): array
+{
+    $conditions = [];
+    $params     = [];
+
+    if (!empty($filterName)) {
+        $conditions[] = "name LIKE :name";
+        $params[':name'] = '%' . $filterName . '%';
+    }
+
+    if ($filterStatus === 'active' || $filterStatus === 'inactive') {
+        $conditions[] = "status = :status";
+        $params[':status'] = $filterStatus;
+    }
+
+    $whereClause = !empty($conditions)
+            ? 'WHERE ' . implode(' AND ', $conditions)
+            : '';
+
+    $query = $pdo->prepare("
+        SELECT * FROM bus_companies
+        $whereClause
+        ORDER BY created_at DESC
+    ");
+
+    $query->execute($params);
+
+    return $query->fetchAll();
+}
+
+
+if (isset($_POST['btn_adm'])) {
+    header("Location: /src/index.php");
+    exit();
+}
+
+
+// Busca todos os nomes para o autocomplete
+function fetchAllBusCompanyNames(PDO $pdo): array
+{
+    $query = $pdo->query("SELECT name FROM bus_companies ORDER BY name ASC");
+    return array_column($query->fetchAll(), 'name');
+}
+
+$filterName   = trim($_GET['name']   ?? '');
+$filterStatus = trim($_GET['status'] ?? '');
+
+$busCompanies        = fetchAllBusCompanies($pdo, $filterName, $filterStatus);
+$busCompanyNames     = fetchAllBusCompanyNames($pdo);
+$busCompanyNamesJson = json_encode($busCompanyNames);
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Viações</title>
+
+    <style>
+        @keyframes shake {
+            0%   { transform: translateX(0); }
+            20%  { transform: translateX(-6px); }
+            40%  { transform: translateX(6px); }
+            60%  { transform: translateX(-4px); }
+            80%  { transform: translateX(4px); }
+            100% { transform: translateX(0); }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+        }
+
+        /* HEADER */
+        .header {
+            width: 90%;
+            margin: 30px auto 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #1a2e6e;
+            color: white;
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            font-weight: bold;
+            transition: all 0.25s ease;
+        }
+
+        .btn:hover {
+            background: #2d5bff;
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* CONTAINER */
+        .container {
+            width: 90%;
+            margin: auto;
+        }
+
+        /* FILTROS */
+        .filters {
+            background: white;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: 0.2s;
+            min-width: 220px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            border-color: #1a2e6e;
+            box-shadow: 0 0 5px rgba(26,46,110,0.2);
+            outline: none;
+        }
+
+        /* AUTOCOMPLETE */
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 9px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #333;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.highlighted {
+            background: #e8eeff;
+            color: #1a2e6e;
+            font-weight: bold;
+        }
+
+        .btn-filter {
+            background: #1a2e6e;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.25s ease;
+        }
+
+        .btn-filter:hover {
+            background: #2d5bff;
+            transform: translateY(-1px);
+        }
+
+        .btn-clear {
+            background: #e4e6eb;
+            color: #333;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.2s;
+        }
+
+        .btn-clear:hover {
+            background: #d0d3da;
+        }
+
+        .filter-active-msg {
+            font-size: 12px;
+            color: #888;
+            margin-left: auto;
+            align-self: center;
+        }
+
+        /* CARD */
+        .table-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+
+        .table-card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-card-header h3 {
+            font-size: 15px;
+            color: #1a2e6e;
+        }
+
+        .table-card-header span {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 10px 14px;
+            background: #f8f9ff;
+            font-size: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        tr:hover td {
+            background: #fafbff;
+        }
+
+        .company-name {
+            font-weight: bold;
+        }
+
+        .company-url {
+            color: #2d5bff;
+            text-decoration: none;
+        }
+
+        .company-url:hover {
+            text-decoration: underline;
+        }
+
+        /* BADGE STATUS */
+        .badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: green;
+        }
+
+        .badge-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ACTIONS */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit {
+            color: #1a2e6e;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .edit:hover {
+            text-decoration: underline;
+        }
+
+        .delete-btn {
+            color: red;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* EMPTY */
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #888;
+        }
+
+        /* ── MODAL DE CONFIRMAÇÃO ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 14px;
+            padding: 36px 32px 28px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: modalIn 0.2s ease, shake 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+
+        .modal-icon {
+            width: 56px;
+            height: 56px;
+            background: #fee2e2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            font-size: 26px;
+        }
+
+        .modal h2 {
+            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-btn-cancel {
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            color: #555;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #f5f5f5;
+        }
+
+        .modal-btn-confirm {
+            padding: 10px 24px;
+            border-radius: 8px;
+            background: #ef4444;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(239,68,68,0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+        <h2>Excluir Viação</h2>
+        <p>Tem certeza que deseja excluir esta viação?<br>Esta ação não pode ser desfeita.</p>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+            <a id="deleteConfirmLink" href="#" class="modal-btn-confirm">Sim, excluir</a>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <h1>Cadastro de Viações</h1>
+    <div class="header-actions">
+        <a href="logs.php" class="btn">Histórico de Alterações</a>
+        <a href="create.php" class="btn">+ Nova Viação</a>
+        <form action="/home/home.php" method="POST">
+            <a href="/home/home.php" class="btn">Home Page</a>
+        </form>
+
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- FILTROS -->
+    <form method="GET" action="index.php" class="filters">
+
+        <div class="filter-group">
+            <label for="filter-name">Nome</label>
+            <input
+                    type="text"
+                    id="filter-name"
+                    name="name"
+                    value="<?= htmlspecialchars($filterName) ?>"
+                    placeholder="Buscar por nome..."
+                    autocomplete="off"
+            >
+            <div class="autocomplete-list" id="autocompleteList"></div>
+        </div>
+
+        <div class="filter-group">
+            <label for="filter-status">Status</label>
+            <select id="filter-status" name="status">
+                <option value="">Todos</option>
+                <option value="active"   <?= $filterStatus === 'active'   ? 'selected' : '' ?>>Ativo</option>
+                <option value="inactive" <?= $filterStatus === 'inactive' ? 'selected' : '' ?>>Inativo</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-filter">Filtrar</button>
+
+        <?php if (!empty($filterName) || !empty($filterStatus)): ?>
+            <a href="index.php" class="btn-clear">Limpar</a>
+            <span class="filter-active-msg">Filtro ativo</span>
+        <?php endif; ?>
+
+    </form>
+
+    <!-- TABELA -->
+    <div class="table-card">
+
+        <div class="table-card-header">
+            <h3>Lista de Viações</h3>
+            <span><?= count($busCompanies) ?> registro(s)</span>
+        </div>
+
+        <?php if (empty($busCompanies)): ?>
+            <div class="empty">Nenhuma viação encontrada.</div>
+        <?php else: ?>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Logo</th>
+                    <th>Nome</th>
+                    <th>URL</th>
+                    <th>Cidade</th>
+                    <th>Status</th>
+                    <th>Criado em</th>
+                    <th>Atualizado em</th>
+                    <th>Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <?php foreach ($busCompanies as $busCompany): ?>
+                    <tr>
+                        <td><?= $busCompany['id'] ?></td>
+
+                        <td>
+                            <?php if (!empty($busCompany['logo'])): ?>
+                                <img src="<?= htmlspecialchars($busCompany['logo']) ?>"
+                                     style="width:50px;height:50px;object-fit:contain;border-radius:6px;border:1px solid #eee;">
+                            <?php else: ?>
+                                —
+                            <?php endif; ?>
+                        </td>
+
+                        <td class="company-name"><?= htmlspecialchars($busCompany['name']) ?></td>
+
+                        <td>
+                            <a class="company-url"
+                               href="<?= htmlspecialchars($busCompany['url']) ?>"
+                               target="_blank">
+                                <?= htmlspecialchars($busCompany['url']) ?>
+                            </a>
+                        </td>
+
+                        <td><?= htmlspecialchars($busCompany['city']) ?></td>
+
+                        <td>
+                            <span class="badge badge-<?= $busCompany['status'] ?>">
+                                <?= $busCompany['status'] === 'active' ? 'Ativo' : 'Inativo' ?>
+                            </span>
+                        </td>
+
+                        <td><?= date('d/m/Y H:i', strtotime($busCompany['created_at'])) ?></td>
+                        <td><?= date('d/m/Y H:i', strtotime($busCompany['updated_at'])) ?></td>
+
+                        <td>
+                            <div class="action-buttons">
+                                <a href="edit.php?id=<?= $busCompany['id'] ?>" class="edit">Editar</a>
+                                <button
+                                        class="delete-btn"
+                                        onclick="openDeleteModal('delete.php?id=<?= $busCompany['id'] ?>')">
+                                    Excluir
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+
+                </tbody>
+            </table>
+
+        <?php endif; ?>
+
+    </div>
+
+    <script>
+        window.allNames = <?= $busCompanyNamesJson ?>;
+    </script>
+    <script src="home/script.js"></script>
+
+</div>
+
+</body>
+</html>
+
+logs.php
+
+<?php
+
+require 'db.php';
+$pdo = $pdo ?? null;
+
+$stmt = $pdo->query("
+    SELECT l.*, b.name
+    FROM bus_company_logs l
+    LEFT JOIN bus_companies b ON b.id = l.bus_company_id
+    ORDER BY l.created_at DESC
+");
+
+$logs = $stmt->fetchAll();
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Histórico de Alterações</title>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    }
+
+    /* HEADER */
+    .header {
+    width: 90%;
+    margin: 30px auto 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+
+    /* BOTÃO */
+    .btn {
+    background: #1a2e6e;
+    color: white;
+    padding: 10px 16px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: all 0.25s ease;
+    }
+
+    .btn:hover {
+    background: #2d5bff;
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .btn:active {
+    transform: scale(0.97);
+    }
+
+    /* CONTAINER */
+    .container {
+    width: 90%;
+    margin: auto;
+    }
+
+    /* CARD */
+    .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    overflow: hidden;
+    }
+
+    /* TABLE */
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    }
+
+    th {
+    background: #f8f9ff;
+        color: #555;
+        padding: 12px;
+    text-align: left;
+    border: 1px solid #eee;
+    }
+
+    td {
+    padding: 10px;
+    border: 1px solid #eee;
+    font-size: 13px;
+    }
+
+    tr:hover {
+    background: #fafbff;
+    }
+
+    /* IMAGEM */
+    img {
+    border-radius: 6px;
+    object-fit: contain;
+    }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Histórico de Alterações</h1>
+    <a href="index.php" class="btn">Voltar</a>
+</div>
+
+<div class="container">
+    <div class="card">
+
+        <?php if (empty($logs)): ?>
+            <div style="padding:20px;color: #555;">Nenhum log registrado.</div>
+        <?php else: ?>
+
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>ID Viação</th>
+                    <th>Logo</th>
+                    <th>Viação</th>
+                    <th>Ação</th>
+                    <th>Antes</th>
+                    <th>Depois</th>
+                    <th>Data</th>
+                </tr>
+
+
+
+                    <?php foreach ($logs as $log): ?>
+
+                    <?php
+                    $old = !empty($log['old_value']) ? json_decode($log['old_value'], true) : null;
+                    $new = !empty($log['new_value']) ? json_decode($log['new_value'], true) : null;
+
+                    $changes = [];
+
+                    if ($log['action'] === 'update' && $old && $new) {
+                        foreach ($new as $key => $value) {
+
+                            if (in_array($key, ['updated_at'])) continue;
+
+                            $oldValue = $old[$key] ?? null;
+
+                            if ($oldValue != $value) {
+                                $changes[$key] = [
+                                        'old' => $oldValue,
+                                        'new' => $value
+                                ];
+                            }
+                        }
+                    }
+                    ?>
+
+                        <tr>
+                            <!-- ID DO LOG -->
+                            <td><?= $log['id'] ?></td>
+
+                            <!-- ID DA VIAÇÃO -->
+                            <td><?= $log['bus_company_id'] ?></td>
+
+                            <!-- LOGO -->
+                            <td>
+                            <?php
+                            $logo = null;
+
+                            if ($log['action'] === 'update') {
+                                $logo = $new['logo'] ?? $old['logo'] ?? null;
+                            } elseif ($log['action'] === 'create') {
+                                $logo = $new['logo'] ?? null;
+                            } elseif ($log['action'] === 'delete') {
+                                $logo = $old['logo'] ?? null;
+                            }
+                            ?>
+
+                            <?php if ($logo): ?>
+                                <img src="<?= $logo ?>" width="50">
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+
+                            <td>
+                                <?php
+                                if ($log['action'] === 'delete' && $old) {
+                                    echo htmlspecialchars($old['name'] ?? 'Removida');
+                                } else {
+                                    echo htmlspecialchars($log['name'] ?? ($new['name'] ?? 'Removida'));
+                                }
+                                ?>
+                            </td>
+
+                        <td><?= strtoupper($log['action']) ?></td>
+
+                        <td>
+                            <?php if ($log['action'] === 'update' && $changes): ?>
+                                <ul>
+                                    <?php foreach ($changes as $key => $c): ?>
+                                        <li>
+                                            <strong><?= $key ?>:</strong>
+
+                                            <?php if ($key === 'logo'): ?>
+                                                <?php if ($c['old']): ?>
+                                                    <br><img src="<?= $c['old'] ?>" width="50">
+                                                <?php else: ?>
+                                                    -
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <?= htmlspecialchars($c['old'] ?? '-') ?>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+
+                        <td>
+                            <?php if ($log['action'] === 'update' && $changes): ?>
+                                <ul>
+                                    <?php foreach ($changes as $key => $c): ?>
+                                        <li>
+                                            <strong><?= $key ?>:</strong>
+
+                                            <?php if ($key === 'logo'): ?>
+                                                <?php if ($c['new']): ?>
+                                                    <br><img src="<?= $c['new'] ?>" width="50">
+                                                <?php else: ?>
+                                                    -
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <?= htmlspecialchars($c['new'] ?? '-') ?>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+
+                        <td><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></td>
+                    </tr>
+
+                <?php endforeach; ?>
+
+            </table>
+
+        <?php endif; ?>
+
+    </div>
+</div>
+
+</body>
+</html>
+
+Já o docker compose e o Dockerfile, esta diferente pois subi outro container que é o do gitclone cujo sao esses
+
+docker-compose.yml
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: task_app_app
+    ports:
+      - "8081:80"
+    command: >
+      sh -c "if [ ! -f vendor/autoload.php ]; then
+        composer install --no-interaction --prefer-dist;
+      else
+        composer dump-autoload --no-interaction --optimize;
+      fi && apache2-foreground"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_NAME: tasks
+      DB_USER: app
+      DB_PASSWORD: app123
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: task_app_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tasks
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app123
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "3308:3306"
+    volumes:
+      - task_mysql_data:/var/lib/mysql
+      - ./src/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  task_mysql_data:
+
+
+Dockerfile
+
+FROM php:8.4-apache
+
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+RUN docker-php-ext-install pdo pdo_mysql \
+    && a2enmod rewrite
+
+# Apache -> DocumentRoot parecido com Laravel (public/)
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/src/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
+    && sed -ri -e 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+
+WORKDIR /var/www/html
+
+
+composer.json
+
+{
+  "name": "raissakuzer/task-app",
+  "description": "Mini app de tasks com estrutura MVC e roteamento em PHP",
+  "type": "project",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
+
+
+composer.lock
+
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "680c48b3a838cd540f60686c4dfc4e4b",
+    "packages": [],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
+}
+
+
+requests.http
+
+@baseUrl = http://localhost:8081
+
+### API - listar tasks (atalho)
+GET {{baseUrl}}/api
+Accept: application/json
+
+### API - listar tasks
+GET {{baseUrl}}/api/tasks
+Accept: application/json
+
+### API - buscar task por id (valido)
+GET {{baseUrl}}/api/tasks/1
+Accept: application/json
+
+### API - buscar task inexistente
+GET {{baseUrl}}/api/tasks/99999
+Accept: application/json
+
+### API - metodo nao permitido (deve retornar 404 no router atual)
+POST {{baseUrl}}/api/tasks
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "Nova task de teste"
+}
+
+
+Não quero que me pegunte nada, faça do jeito certo e somente mande o codigo para mim. Pois fazem 3 dias que te mando 1 mensagem e expira, nao consegui codar nada. Mande somente o codigo, oq tenho q fazer, aonde, oq mudar, oq nao mudar

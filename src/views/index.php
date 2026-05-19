@@ -6,6 +6,15 @@
 /** @var string $busCompanyNamesJson */
 ?>
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/app.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<body>
+
 <div class="modal-overlay" id="deleteModal">
     <div class="modal">
         <h2>Excluir Viação</h2>
@@ -145,3 +154,4 @@
 </script>
 
 <script src="/script.js"></script>
+</body>

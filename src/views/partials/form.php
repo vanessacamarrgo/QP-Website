@@ -2,6 +2,8 @@
 /** @var array $busCompany */
 ?>
 
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700&display=swap" rel="stylesheet">
+
 <div class="form-group">
     <label for="logo">Logo da Viação</label>
     <input
@@ -64,7 +66,16 @@
 </div>
 
 <style>
-    /* Estilos do formulário */
+    /* ALTERAÇÃO: Aplicando Sora globalmente e no título */
+    * {
+        font-family: 'Sora', sans-serif;
+    }
+
+    h1 {
+        font-family: 'Sora', sans-serif !important;
+    }
+
+    /* Resto do seu CSS original sem alterações */
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; color: #555; }
     input, select {
@@ -81,11 +92,13 @@
         box-shadow: 0 0 0 2px rgba(26, 46, 110, 0.1);
     }
 
-    /* Reaproveitando os botões e estilos que você já usa */
     .header { width: 90%; margin: 30px auto 15px; display: flex; justify-content: space-between; align-items: center; }
     .btn { background: #1a2e6e; color: white; padding: 10px 16px; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; display: inline-block; font-weight: bold; transition: all 0.25s ease; }
     .btn:hover { background: #2d5bff; transform: translateY(-2px) scale(1.03); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-    .btn-cancel { background: gray; }
-    .container { width: 90%; max-width: 650px; margin: auto; }
+    .btn-cancel {
+        background: gray;
+        padding: 10px 12px; /* O primeiro número é altura, o segundo é largura lateral */
+        font-size: 13px;    /* Opcional: diminui um pouco a letra também */
+    }    .container { width: 90%; max-width: 650px; margin: auto; }
     .form-card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
 </style>
