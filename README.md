@@ -24,7 +24,7 @@
 
 Este projeto é um **mini-framework PHP 8.0** desenvolvido do zero, com separação de responsabilidades clara e arquitetura em camadas inspirada no Laravel. A aplicação gerencia entidades de `BusCompany` (Viações), oferecendo:
 
-- ️ **Painel Administrativo** completo com CRUD
+- ️**Painel Administrativo** completo com CRUD
 -  **Homepage pública** fiel ao design da Quero Passagem
 -  **Histórico de Alterações** (audit log) automático
 -  **Ambiente Dockerizado** com Apache + MySQL 8
