@@ -149,11 +149,9 @@ declare(strict_types=1);
                 $cLogo = is_object($company) ? $company->logo : ($company['logo'] ?? '');
 
                 // LÓGICA CORRIGIDA:
-                // O banco já guarda "uploads/nome.png". Só precisamos colocar a / na frente.
                 if (empty($cLogo)) {
                     $logoUrl = "https://via.placeholder.com/100x40?text=Sem+Logo";
                 } else {
-                    // Garante que o caminho comece com / e não duplique o nome da pasta
                     $logoUrl = "/" . ltrim((string)$cLogo, '/');
                 }
                 ?>
@@ -165,7 +163,11 @@ declare(strict_types=1);
                 </li>
             <?php endforeach; ?>
         <?php else: ?>
-            <p>Nenhuma viação cadastrada no sistema.</p>
+    </ul>
+    <div class="empty-list-container">
+        <p class="empty-list-message">Nenhuma viação cadastrada no sistema.</p>
+    </div>
+    <ul class="hidden">
         <?php endif; ?>
     </ul>
 </section>
