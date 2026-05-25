@@ -16,7 +16,7 @@ class AuthController {
         die("Erro Crítico: O arquivo views/login.php não foi encontrado.");
     }
 
-    // processa o login
+    // processa o login.
     public function authenticate() {
         if (session_status() === PHP_SESSION_NONE) session_start();
 
