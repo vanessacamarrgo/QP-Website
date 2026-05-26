@@ -28,7 +28,6 @@ final class BusCompany
             city: (string)($row['city'] ?? ''),
             status: (string)($row['status'] ?? 'active'),
             logo: isset($row['logo']) ? (string)$row['logo'] : null,
-            // Aqui está o segredo para sumir o Warning:
             createdAt: (string)($row['created_at'] ?? ''),
             updatedAt: (string)($row['updated_at'] ?? ''),
         );
