@@ -15,11 +15,14 @@ CREATE TABLE users (
                        email VARCHAR(191) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       status ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT 'active'
+                       status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+                       type ENUM('admin', 'usuario') DEFAULT 'usuario'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO users (name, email, password) VALUES
     ('Administrador', 'admin@gmail.com', '$2y$12$w/Aypc3W.YNLh1Mj4qyLpuBBFdmeErmLjwJDJ6pl9f4jtkYp9tere');
+
+UPDATE tasks.users SET type = 'admin' WHERE email = 'admin@gmail.com';
 
 -- 2. Viações
 CREATE TABLE bus_companies (
@@ -27,7 +30,7 @@ CREATE TABLE bus_companies (
                                name VARCHAR(255) NOT NULL,
                                url VARCHAR(255) NOT NULL,
                                city VARCHAR(100) NOT NULL,
-                               status ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT 'active',
+                               status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
                                logo VARCHAR(255) NULL,
                                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

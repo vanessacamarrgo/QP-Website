@@ -29,9 +29,10 @@ class AuthController {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_id']    = $user['id'];
+            $_SESSION['user_name']  = $user['name'];
             $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_tipo']  = $user['tipo'] ?? 'usuario'; // <-- salva o tipo
 
             header('Location: /');
             exit;
@@ -66,7 +67,7 @@ class AuthController {
             $pdo = getPdo();
             $hash = password_hash($password, PASSWORD_BCRYPT);
 
-            $stmt = $pdo->prepare("INSERT INTO tasks.users (name, email, password) VALUES (?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO tasks.users (name, email, password, type) VALUES (?, ?, ?, 'usuario')");
 
             try {
                 $stmt->execute([$name, $email, $hash]);
