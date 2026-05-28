@@ -5,7 +5,6 @@
 /** @var array $old */
 
 use App\Models\User;
-
 ?>
 
 <div class="header">
@@ -21,7 +20,7 @@ use App\Models\User;
     <?php endif; ?>
 
     <form method="POST" action="/users/<?= $user->id ?>/update" class="form-card">
-        <?php $userData = $old;
+        <?php $user = $old;
         include __DIR__ . '/../partials/form_user.php';
          ?>
     </form>
